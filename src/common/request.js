@@ -1,12 +1,14 @@
 import axios from 'axios'
 import ElementUI from 'element-ui'
 import Vue from 'vue'
+import qs from 'qs'
 
-let axiosIns = axios.create({});
+let axiosIns = axios.create({
+  withCredentials: true,
+  baseURL: process.env.BASE_API // api 的 base_url
+});
 
-axiosIns.defaults.baseURL = process.env.BASE_API;
 axiosIns.interceptors.response.use(function (response) {
-  // let data = response.data;
   let status = response.status;
   if (status === 200) {
     if (response.data.code !== 20000) {
@@ -21,29 +23,37 @@ axiosIns.interceptors.response.use(function (response) {
 let ajaxMethod = ['get', 'post'];
 let api = {};
 ajaxMethod.forEach((method) => {
-  // 数组取值的两种方式
-  api[method] = function (uri, data, config) {
+  // config: {stringify: true} 需要序列化data 默认
+  // config: {stringify: false} 以json格式传输参数
+  api[method] = function (url, data, config = {stringify: true}) {
+    // that是vue的实例this对象
+    const that = data.that
+    if (data.that) {
+      delete data.that
+    }
     return new Promise(function (resolve, reject) {
       if (method === 'post') {
         axiosIns.request({
-          url: uri,
+          url: url,
           method: 'post',
-          data: {
-            ...data
-          }
+          data: config.stringify ? qs.stringify(data) : data
         }).then((response) => {
           resolve(response);
         }).catch((response) => {
-          console.log('error' + response.data.msg)
+          reject(response)
           ElementUI.Notification.error({
             title: 'error',
-            message: response.data.msg,
+            message: response.status === 200 ? response.data.msg : `网络错误`,
             duration: 2000
-          });
+          })
+          // 如果从后台传来的code未41000（未授权、未登录）则将页面导航到登录页
+          if (response.data.code && response.data.code === 41000) {
+            that.$router.push({ path: '/login' });
+          }
         })
-      } else {
+      } else if (method === 'get') {
         axiosIns.request({
-          url: uri,
+          url: url,
           method: 'get',
           params: {
             ...data
@@ -51,12 +61,16 @@ ajaxMethod.forEach((method) => {
         }).then((response) => {
           resolve(response);
         }).catch((response) => {
-          console.log('error' + response.data.msg)
+          reject(response)
           ElementUI.Notification.error({
             title: 'error',
-            message: response.data.msg,
+            message: response.status === 200 ? response.data.msg : `网络错误`,
             duration: 2000
-          });
+          })
+          // 如果从后台传来的code未41000（未授权、未登录）则将页面导航到登录页
+          if (response.data.code && response.data.code === 41000) {
+            that.$router.push({ path: '/login' });
+          }
         })
       }
     })

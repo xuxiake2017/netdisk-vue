@@ -7,7 +7,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import 'font-awesome/css/font-awesome.min.css'
 import './common/request'
 import router from './router'
-// import store from '@/store'
+import store from '@/store'
 
 Vue.use(ElementUI);
 
@@ -24,6 +24,7 @@ Vue.config.productionTip = false
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
+  store,
   router,
   components: { App },
   template: '<App/>',
