@@ -72,18 +72,19 @@
       :before-upload="beforeUpload"
       :on-preview="handlePreview"
       :on-change="onFileChange"
+      :with-credentials="true"
       multiple
       :auto-upload="false"
       :limit="3"
       :on-exceed="handleExceed"
       :data="uploadData">
       <el-button size="small" type="primary">点击上传</el-button>
-      <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+      <!--<el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>-->
       <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
     </el-upload>
     <span slot="footer" class="dialog-footer">
-      <el-button @click="uploaDialogVisible = false">取 消</el-button>
-      <el-button type="primary" @click="uploaDialogVisible = false">确 定</el-button>
+      <el-button @click="closeUploadDialog">取 消</el-button>
+      <el-button type="primary" @click="submitUpload">确 定</el-button>
     </span>
   </el-dialog>
 
@@ -94,7 +95,7 @@
 // import axios from 'axios';
 import util from '../../common/util'
 // import NProgress from 'nprogress'
-import { GetFileList } from '../../api/api'
+import { GetFileList, CheckMd5 } from '../../api/api'
 import GetFileMD5 from '../../common/getFileMD5'
 
 export default {
@@ -119,7 +120,6 @@ export default {
       sels: [], // 列表选中列
       uploaDialogVisible: false,
       uploadData: {
-        fileList: [],
         parentId: -1,
         md5Hex: '111',
         lastModifiedDate: null
@@ -241,23 +241,38 @@ export default {
     openUploadDialog () {
       this.uploaDialogVisible = true
     },
+    closeUploadDialog () {
+      this.uploaDialogVisible = false
+      this.$refs.upload.clearFiles();
+      this.$store.commit('clearFile')
+    },
     handleClose (done) {
+      this.$refs.upload.clearFiles();
+      this.$store.commit('clearFile')
       done()
     },
     handleExceed (files, fileList) {
       this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
     },
     beforeRemove (file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`);
+      return this.$confirm(`确定移除 ${file.name}？`).then(() => {
+        this.$store.commit('delFile', file.uid)
+      });
     },
-    beforeUpload () {
-      this.uploadData.lastModifiedDate = new Date().getTime()
+    beforeUpload (file) {
+      // this.uploadData.lastModifiedDate = new Date().getTime()
+      console.log(file)
+      CheckMd5(this.$store.getters.getFile(file.uid)).then(res => {
+        console.log(res)
+      })
+      return false
     },
     handlePreview (file) {
-      GetFileMD5(file.raw, this)
+      console.log(file)
     },
     onFileChange (file, fileList) {
-      // console.log(file)
+      GetFileMD5(file.raw, file.uid, this)
+      console.log(fileList)
     },
     submitUpload () {
       this.$refs.upload.submit();

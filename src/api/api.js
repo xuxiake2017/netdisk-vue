@@ -8,6 +8,10 @@ export const GetFileList = params => {
   return post('file/listFile', params, {stringify: true}).then(res => res.data)
 }
 
+export const CheckMd5 = params => {
+  return post('file/checkMd5', params, {stringify: true}).then(res => res.data)
+}
+
 // export const getUserList = params => {
 //   return axios.get(`${base}/user/list`, {params: params})
 // }

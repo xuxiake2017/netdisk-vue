@@ -7,14 +7,14 @@ import ElementUI from 'element-ui'
  * @param that
  * @constructor
  */
-export default function GetFileMD5 (file, that) {
-  let md5 = null;
+export default function GetFileMD5 (file, uid, that) {
+  let md5Hex = null;
   let fileReader = new FileReader()
   let blobSlice = File.prototype.mozSlice || File.prototype.webkitSlice || File.prototype.slice;
 
   let fileSize = file.size;
   let fileRealName = file.name;
-  let lastModifiedDate = file.lastModifiedDate;
+  let lastModifiedDate = file.lastModifiedDate.getTime();
   if (fileSize > 1024 * 1024 * 500) {
     ElementUI.Notification.error({
       title: 'error',
@@ -38,11 +38,11 @@ export default function GetFileMD5 (file, that) {
       loadNext();
     } else {
       // console.log("finished loading");
-      md5 = spark.end();
+      md5Hex = spark.end();
       // console.info("computed hash", md5); // compute hash
-      console.log(md5)
-      if (md5) {
-        that.$store.commit('storeFile', {md5, fileSize, fileRealName, lastModifiedDate})
+      console.log(md5Hex)
+      if (md5Hex) {
+        that.$store.commit('storeFile', {uid, md5Hex, fileSize, fileRealName, lastModifiedDate})
       }
     }
   };
