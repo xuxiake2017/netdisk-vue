@@ -1,15 +1,31 @@
 import { post } from '../common/request'
 
-export const RequestLogin = params => {
-  return post('user/login', params, {stringify: false}).then(res => res.data)
-}
-
 export const GetFileList = params => {
   return post('file/listFile', params, {stringify: true}).then(res => res.data)
 }
 
 export const CheckMd5 = params => {
   return post('file/checkMd5', params, {stringify: true}).then(res => res.data)
+}
+
+export const UploadMD5 = params => {
+  return post('file/uploadMD5', params, {stringify: true}).then(res => res.data)
+}
+
+export const ListAllDir = params => {
+  return post('dir/listAllDir', params, {stringify: true}).then(res => res.data)
+}
+
+export const MkDir = params => {
+  return post('dir/mkDir', params, {stringify: true}).then(res => res.data)
+}
+
+export const MoveFile = params => {
+  return post('dir/moveFile', params, {stringify: true}).then(res => res.data)
+}
+
+export const ReName = params => {
+  return post('file/reName', params, {stringify: true}).then(res => res.data)
 }
 
 // export const getUserList = params => {

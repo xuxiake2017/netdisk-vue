@@ -3,12 +3,11 @@ import NotFound from '../views/404.vue'
 import Home from '../views/Home.vue'
 // import Main from '../views/Main.vue'
 import fileList from '../views/nav1/fileList.vue'
-import Form from '../views/nav1/Form.vue'
-import user from '../views/nav1/user.vue'
-import Page4 from '../views/nav2/Page4.vue'
-import Page5 from '../views/nav2/Page5.vue'
-import Page6 from '../views/nav3/Page6.vue'
-import echarts from '../views/charts/echarts.vue'
+import Document from '../views/nav1/document.vue'
+import Music from '../views/nav1/music.vue'
+import Video from '../views/nav1/video.vue'
+import Pic from '../views/nav2/pic.vue'
+import Statistical from '../views/charts/statistical.vue'
 import Vue from 'vue'
 import Router from 'vue-router'
 
@@ -33,36 +32,27 @@ let routes = [
     iconCls: 'el-icon-document', // 图标样式class
     children: [
       { path: '/fileList', component: fileList, name: '所有文件' },
-      { path: '/form', component: Form, name: 'Form' },
-      { path: '/user', component: user, name: '列表' }
+      { path: '/document', component: Document, name: '文档' },
+      { path: '/video', component: Video, name: '视频' },
+      { path: '/music', component: Music, name: '音乐' }
     ]
   },
   {
     path: '/',
     component: Home,
-    name: '导航二',
-    iconCls: 'fa fa-id-card-o',
+    name: '相册',
+    iconCls: 'fa fa-picture-o',
     children: [
-      { path: '/page4', component: Page4, name: '页面4' },
-      { path: '/page5', component: Page5, name: '页面5' }
+      { path: '/pic', component: Pic, name: '相册' }
     ]
   },
   {
     path: '/',
     component: Home,
-    name: '导航三',
-    iconCls: 'fa fa-address-card',
-    children: [
-      { path: '/page6', component: Page6, name: '页面6' }
-    ]
-  },
-  {
-    path: '/',
-    component: Home,
-    name: 'Charts',
+    name: '统计',
     iconCls: 'fa fa-bar-chart',
     children: [
-      { path: '/echarts', component: echarts, name: 'echarts' }
+      { path: '/statistical', component: Statistical, name: '统计' }
     ]
   },
   {

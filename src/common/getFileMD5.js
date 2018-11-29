@@ -1,5 +1,7 @@
 import SparkMD5 from 'spark-md5'
 import ElementUI from 'element-ui'
+// 耦合了，没办法呀
+import { CheckMd5 } from '@/api/file'
 
 /**
  * 计算文件md5值
@@ -7,8 +9,9 @@ import ElementUI from 'element-ui'
  * @param that
  * @constructor
  */
-export default function GetFileMD5 (file, uid, that) {
+export default function GetFileMD5 (file, uid, parentId, that) {
   let md5Hex = null;
+  let isExist = true
   let fileReader = new FileReader()
   let blobSlice = File.prototype.mozSlice || File.prototype.webkitSlice || File.prototype.slice;
 
@@ -42,7 +45,17 @@ export default function GetFileMD5 (file, uid, that) {
       // console.info("computed hash", md5); // compute hash
       console.log(md5Hex)
       if (md5Hex) {
-        that.$store.commit('storeFile', {uid, md5Hex, fileSize, fileRealName, lastModifiedDate})
+        CheckMd5({md5Hex}).then(res => {
+        }).catch(res => {
+          console.log(res.data)
+          if (res.data.code === 20034) {
+            // 服务器存在该MD5值
+          } else if (res.data.code === 20033) {
+            // 服务器不存在该MD5值
+            isExist = false
+          }
+          that.$store.commit('storeFile', {uid, md5Hex, fileSize, fileRealName, lastModifiedDate, parentId, isExist})
+        })
       }
     }
   };

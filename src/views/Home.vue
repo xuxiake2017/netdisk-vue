@@ -59,6 +59,8 @@
 </template>
 
 <script>
+import { Logout } from '../api/user'
+
 export default {
   data () {
     return {
@@ -96,10 +98,11 @@ export default {
       this.$confirm('确认退出吗?', '提示', {
         // type: 'warning'
       }).then(() => {
-        sessionStorage.removeItem('user');
-        _this.$router.push('/login');
+        Logout({that: this}).then(res => {
+          sessionStorage.removeItem('user');
+          _this.$router.push('/login');
+        })
       }).catch(() => {
-
       });
     },
     // 折叠导航栏
@@ -173,7 +176,7 @@ export default {
       width:230px;
     }
     .logo-collapse-width{
-      width:60px
+      width:65px
     }
     .tools{
       padding: 0px 23px;

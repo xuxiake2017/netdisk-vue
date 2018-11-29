@@ -5,7 +5,6 @@ export default {
   },
   mutations: {
     storeFile (state, file) {
-      console.log(file)
       state.fileList.push(file)
       console.log(state.fileList)
     },
@@ -17,11 +16,9 @@ export default {
         }
       })
       state.fileList.splice(i, 1)
-      console.log(state.fileList)
     },
     clearFile (state) {
       state.fileList.length = 0
-      console.log(state.fileList)
     }
   },
   actions: {},

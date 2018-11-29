@@ -8,12 +8,11 @@
       </el-form-item>
       <el-form-item>
         <el-button plain type="primary" v-on:click.prevent="getFileList2">查询</el-button>
-      </el-form-item>
-      <el-form-item>
         <el-button plain type="primary" @click="handleReset">重置</el-button>
       </el-form-item>
       <el-form-item>
         <el-button type="success" @click="openUploadDialog">上传</el-button>
+        <el-button type="primary" @click="dirDialogVisible = true">新建文件夹</el-button>
       </el-form-item>
     </el-form>
   </el-col>
@@ -45,10 +44,12 @@
     </el-table-column>
     <el-table-column prop="uploadTime" label="上传时间" width="200" :formatter="formatFileTime" sortable>
     </el-table-column>
-    <el-table-column label="操作" width="150">
+    <el-table-column label="操作" width="400">
       <template scope="scope">
         <el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">删除</el-button>
         <el-button v-if="scope.row.fileType!=0" type="success" size="small" @click="handleDownload(scope.$index, scope.row)">下载</el-button>
+        <el-button type="primary" size="small" @click="handleMove(scope.$index, scope.row)">移动</el-button>
+        <el-button type="info" size="small" @click="handleReName(scope.$index, scope.row)">重命名</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -56,10 +57,18 @@
   <!--工具条-->
   <el-col :span="24" class="toolbar">
     <el-button type="danger" @click="batchRemove" :disabled="this.sels.length===0">批量删除</el-button>
-    <el-pagination background layout="prev, pager, next" @current-change="handleCurrentChange" :page-size="tableData.pagination.pageSize" :total="tableData.pagination.total" style="float:right;">
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      @current-change="handleCurrentChange"
+      :page-size="tableData.pagination.pageSize"
+      :total="tableData.pagination.total"
+      :current-page="tableData.pagination.pageNum"
+      style="float:right;">
     </el-pagination>
   </el-col>
 
+  <!--上传文件对话框-->
   <el-dialog
     title="提示"
     :visible.sync="uploaDialogVisible"
@@ -88,6 +97,63 @@
     </span>
   </el-dialog>
 
+  <!--新建文件夹对话框-->
+  <el-dialog
+    title="提示"
+    :visible.sync="dirDialogVisible"
+    :before-close="dirDialogClose"
+    width="30%">
+    <el-input v-model="newDir" placeholder="请输入文件夹名称"></el-input>
+    <span slot="footer" class="dialog-footer">
+    <el-button @click="dirDialogClose">取 消</el-button>
+    <el-button type="primary" @click="mkDir">确 定</el-button>
+  </span>
+  </el-dialog>
+
+  <!--重命名对话框-->
+  <el-dialog
+    title="提示"
+    :visible.sync="reNameDialogVisible"
+    :before-close="dirDialogClose"
+    width="30%">
+    <el-input v-model="oldName" placeholder="请输入文件夹名称"></el-input>
+    <span slot="footer" class="dialog-footer">
+    <el-button @click="reNameDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="reName">确 定</el-button>
+  </span>
+  </el-dialog>
+
+  <!--移动文件对话框-->
+  <el-dialog
+    title="提示"
+    :visible.sync="moveDialogVisible"
+    width="30%"
+    :before-close="moveDialogClose">
+    <div class="block">
+      <el-tree
+        highlight-current
+        :default-expanded-keys="[-1]"
+        check-on-click-node
+        ref="tree"
+        @node-expand="nodeExpand"
+        :lazy="true"
+        :load="loadChildTree"
+        accordion
+        :data="dirs"
+        node-key="id"
+        :expand-on-click-node="false">
+      <span class="custom-tree-node" slot-scope="{ node, data }">
+        <i class="fa fa-folder"></i>
+        <span>{{ node.label }}</span>
+      </span>
+      </el-tree>
+    </div>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="moveDialogVisible = false">取 消</el-button>
+      <el-button type="primary" @click="moveFile">确 定</el-button>
+    </span>
+  </el-dialog>
+
 </section>
 </template>
 
@@ -95,7 +161,7 @@
 // import axios from 'axios';
 import util from '../../common/util'
 // import NProgress from 'nprogress'
-import { GetFileList, CheckMd5 } from '../../api/api'
+import { GetFileList, UploadMD5, ListAllDir, MkDir, MoveFile, ReName } from '../../api/file'
 import GetFileMD5 from '../../common/getFileMD5'
 
 export default {
@@ -124,7 +190,16 @@ export default {
         md5Hex: '111',
         lastModifiedDate: null
       },
-      uploadAction: ''
+      uploadAction: `${process.env.BASE_API}/file/fileUpload`,
+      moveDialogVisible: false,
+      dirDialogVisible: false,
+      dirs: [],
+      newDir: '',
+      movedFileSaveName: '',
+      movedId: 0,
+      reNameDialogVisible: false,
+      oldName: '',
+      reNameRow: null
     }
   },
   methods: {
@@ -175,10 +250,12 @@ export default {
     formatFileTime (row) {
       return util.formatDate.format(new Date(row.uploadTime), 'yyyy-MM-dd hh:mm:ss')
     },
+    // 页码改变时
     handleCurrentChange (val) {
       this.tableData.pagination.pageNum = val;
       this.getFileList();
     },
+    // 文件路径跳转
     jump (item, index) {
       console.log(this.pathStore.length, index)
       if ((this.pathStore.length === 1) || (this.pathStore.length > 1 && index + 1 === this.pathStore.length)) {
@@ -220,6 +297,7 @@ export default {
     selsChange: function (sels) {
       this.sels = sels;
     },
+    // 搜索重置
     handleReset () {
       this.filters.fileRealName = '';
       this.filters.parentId = -1
@@ -227,10 +305,87 @@ export default {
       this.pathStore.splice(1, this.pathStore.length)
       this.getFileList();
     },
+    // 文件删除
     handleDel (index, row) {},
+    // 文件下载
     handleDownload (index, row) {
       window.open(`${process.env.BASE_API}/file/downLoad?fileSaveName=${row.fileSaveName}`, '_blank');
     },
+    listAllDir (parentId) {
+      ListAllDir({parentId}).then(res => {
+        console.log(res.data)
+        let nodes = []
+        res.data.forEach((value, index) => {
+          let node = {}
+          node['id'] = value.id
+          node['label'] = value.fileRealName
+          nodes.push(node)
+        })
+      })
+    },
+    // 树的加载函数
+    loadChildTree (node, resolve) {
+      if (node.id === 0) {
+        let nodes = []
+        let node_ = {}
+        node_['id'] = -1
+        node_['label'] = '/'
+        nodes.push(node_)
+        resolve(nodes)
+      } else {
+        if (this.movedId === node.key) {
+          this.$notify({
+            duration: 2000,
+            title: '警告',
+            message: '不能移动到自身及其子目录',
+            type: 'warning'
+          })
+          resolve([])
+        } else {
+          ListAllDir({parentId: node.key}).then(res => {
+            let nodes = []
+            res.data.forEach((value, index) => {
+              let node_ = {}
+              node_['id'] = value.id
+              node_['label'] = value.fileRealName
+              nodes.push(node_)
+            })
+            resolve(nodes)
+          })
+        }
+      }
+    },
+    // 树被展开时调用（因为树不会每次去重新加载数据）
+    nodeExpand (dir, node, tree) {
+      if (this.movedId !== node.key) {
+        window.setTimeout(() => {
+          const theChildren = node.childNodes
+          theChildren.splice(0, theChildren.length)
+          ListAllDir({parentId: node.key}).then(res => {
+            res.data.forEach((value, index) => {
+              let node_ = {}
+              node_['id'] = value.id
+              node_['label'] = value.fileRealName
+              node_['disabled'] = false
+              this.$refs.tree.append(node_, node)
+            })
+          })
+        }, 200)
+      }
+    },
+    // 打开文件移动对话框
+    handleMove (index, row) {
+      this.movedFileSaveName = row.fileSaveName
+      this.movedId = row.id
+      this.moveDialogVisible = true
+    },
+    // 打开重命名对话框
+    handleReName (index, row) {
+      this.reNameDialogVisible = true
+      this.oldName = row.fileRealName
+      this.reNameRow = {...row}
+    },
+    // 使鼠标变成手型
     showPointer ({row, column, rowIndex, columnIndex}) {
       if (row.fileType === 0 && columnIndex === 3) {
         return 'cursor: pointer'
@@ -238,49 +393,159 @@ export default {
       return ''
     },
     batchRemove () {},
+    // 打开上传文件对话框
     openUploadDialog () {
       this.uploaDialogVisible = true
     },
+    // 关闭上传文件对话框
     closeUploadDialog () {
       this.uploaDialogVisible = false
       this.$refs.upload.clearFiles();
       this.$store.commit('clearFile')
     },
+    // 关闭上传文件对话框
     handleClose (done) {
       this.$refs.upload.clearFiles();
       this.$store.commit('clearFile')
       done()
     },
+    // 文件数量限制
     handleExceed (files, fileList) {
       this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
     },
+    // 在文件移除之前
     beforeRemove (file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`).then(() => {
-        this.$store.commit('delFile', file.uid)
-      });
+      // return this.$confirm(`确定移除 ${file.name}？`).then(() => {
+      //   this.$store.commit('delFile', file.uid)
+      // });
+      this.$store.commit('delFile', file.uid)
+      return true
     },
+    // 在文件上传之前
     beforeUpload (file) {
-      // this.uploadData.lastModifiedDate = new Date().getTime()
-      console.log(file)
-      CheckMd5(this.$store.getters.getFile(file.uid)).then(res => {
-        console.log(res)
-      })
-      return false
+      const file_ = this.$store.getters.getFile(file.uid)
+      if (!file_) {
+        this.$notify({
+          duration: 2000,
+          title: '警告',
+          message: 'MD5未计算完毕',
+          type: 'warning'
+        })
+        throw new Error('MD5未计算完毕');
+      } else {
+        this.uploadData.lastModifiedDate = file_.lastModifiedDate
+        this.uploadData.md5Hex = file_.md5Hex
+        this.uploadData.parentId = this.filters.parentId
+      }
+      if (file_.isExist) {
+        // 服务器已经存在该文件
+        UploadMD5(file_).then(res => {
+          this.$notify({
+            duration: 2000,
+            title: '提示',
+            message: `${file.name}上传成功！`,
+            type: 'success'
+          })
+        }).catch(res => {
+        })
+        return false
+      } else {
+        // 服务器不存在该文件，需要上传
+        return true
+      }
     },
     handlePreview (file) {
       console.log(file)
     },
+    // 文件列表改变时，选择文件后开始计算文件md5值
     onFileChange (file, fileList) {
-      GetFileMD5(file.raw, file.uid, this)
-      console.log(fileList)
+      GetFileMD5(file.raw, file.uid, this.filters.parentId, this)
     },
+    // 文件手动上传
     submitUpload () {
       this.$refs.upload.submit();
+      let tag = true
+      this.$refs.upload.uploadFiles.forEach((value, index) => {
+        if (value.status !== 'success') {
+          tag = false
+        }
+      })
+      if (tag) {
+        window.setTimeout(() => {
+          this.closeUploadDialog()
+          this.getFileList()
+        }, 500)
+      }
+    },
+    // 关闭移动文件对话框
+    moveDialogClose (done) {
+      done()
+    },
+    // 新建文件夹
+    mkDir () {
+      MkDir({fileRealName: this.newDir, parentId: this.filters.parentId}).then(res => {
+        this.$notify({
+          duration: 2000,
+          title: '提示',
+          message: `文件夹${this.newDir}新建成功！`,
+          type: 'success'
+        })
+        this.getFileList()
+        this.dirDialogVisible = false
+      })
+    },
+    // 关闭新建文件夹对话框
+    dirDialogClose () {
+      this.newDir = ''
+      this.dirDialogVisible = false
+    },
+    // 移动文件
+    moveFile () {
+      let parentId = this.$refs.tree.getCurrentKey()
+      if (!parentId) {
+        parentId = -1
+      }
+      if (this.movedId === parentId) {
+        this.$notify({
+          duration: 2000,
+          title: '警告',
+          message: '不能移动到自身及其子目录',
+          type: 'warning'
+        })
+        return
+      }
+      MoveFile({parentId: parentId, fileSaveName: this.movedFileSaveName}).then(res => {
+        this.$notify({
+          duration: 2000,
+          title: '提示',
+          message: `文件移动成功！`,
+          type: 'success'
+        })
+        this.moveDialogVisible = false
+        this.getFileList()
+      })
+    },
+    // 重命名
+    reName () {
+      ReName({
+        parentId: this.filters.parentId,
+        fileSaveName: this.reNameRow.fileSaveName,
+        fileRealName: this.oldName + (this.reNameRow.fileType === 0 ? '' : ('.' + this.reNameRow.fileExtName)),
+        isDir: this.reNameRow.isDir
+      }).then(res => {
+        this.$notify({
+          duration: 2000,
+          title: '提示',
+          message: `文件重命名成功！`,
+          type: 'success'
+        })
+        this.reNameDialogVisible = false
+        this.getFileList()
+      })
     }
   },
   mounted () {
-    this.uploadAction = `${process.env.BASE_API}/file/fileUpload`
-    this.getFileList();
+    this.getFileList()
   }
 }
 

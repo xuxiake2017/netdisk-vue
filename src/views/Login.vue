@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { RequestLogin } from '../api/api';
+import { RequestLogin } from '../api/user';
 // import NProgress from 'nprogress'
 export default {
   data () {
@@ -30,8 +30,8 @@ export default {
       logining: false,
       imgCode: process.env.BASE_API + '/createImg',
       ruleForm2: {
-        loginInfo: 'xuxiake',
-        password: '123',
+        loginInfo: '',
+        password: '',
         imgCode: ''
       },
       rules2: {
