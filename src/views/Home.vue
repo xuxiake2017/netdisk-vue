@@ -94,13 +94,14 @@ export default {
     },
     // 退出登录
     logout: function () {
-      var _this = this;
+      // var _this = this;
       this.$confirm('确认退出吗?', '提示', {
         // type: 'warning'
       }).then(() => {
-        Logout({that: this}).then(res => {
+        Logout().then(res => {
           sessionStorage.removeItem('user');
-          _this.$router.push('/login');
+          // _this.$router.push('/login');
+          location.reload();
         })
       }).catch(() => {
       });

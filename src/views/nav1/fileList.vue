@@ -280,7 +280,7 @@ export default {
         }
       }
       let param = {
-        ...this.filters, ...this.tableData.pagination, that: this
+        ...this.filters, ...this.tableData.pagination
       };
       this.listLoading = true;
       // NProgress.start();

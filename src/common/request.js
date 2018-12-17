@@ -26,17 +26,12 @@ ajaxMethod.forEach((method) => {
   // config: {stringify: true} 需要序列化data 默认
   // config: {stringify: false} 以json格式传输参数
   api[method] = function (url, data, config = {stringify: true}) {
-    // that是vue的实例this对象
-    const that = data.that
-    if (data.that) {
-      delete data.that
-    }
     return new Promise(function (resolve, reject) {
       if (method === 'post') {
         axiosIns.request({
           url: url,
           method: 'post',
-          data: config.stringify ? qs.stringify(data) : data
+          data: config.stringify && data ? qs.stringify(data) : data
         }).then((response) => {
           resolve(response);
         }).catch((response) => {
@@ -49,9 +44,17 @@ ajaxMethod.forEach((method) => {
               duration: 2000
             })
           }
-          // 如果从后台传来的code未41000（未授权、未登录）则将页面导航到登录页
+          // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
           if (response.data.code && response.data.code === 41000) {
-            that.$router.push({ path: '/login' });
+            ElementUI.Notification.error({
+              title: 'error',
+              message: response.data.msg,
+              duration: 2000
+            })
+            window.setTimeout(() => {
+              sessionStorage.removeItem('user');
+              location.reload();
+            }, 2000);
           }
         })
       } else if (method === 'get') {
@@ -73,9 +76,17 @@ ajaxMethod.forEach((method) => {
               duration: 2000
             })
           }
-          // 如果从后台传来的code未41000（未授权、未登录）则将页面导航到登录页
+          // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
           if (response.data.code && response.data.code === 41000) {
-            that.$router.push({ path: '/login' });
+            ElementUI.Notification.error({
+              title: 'error',
+              message: response.data.msg,
+              duration: 2000
+            })
+            window.setTimeout(() => {
+              sessionStorage.removeItem('user');
+              location.reload();
+            }, 2000);
           }
         })
       }
