@@ -1,19 +1,15 @@
 <template>
   <div>
-    <div class="infiniteScroll"
-         style="height: 1400px;background-color: #ccc;width: 400px;margin: 0 auto;"
-         v-infinite-scroll="loadMore"
-         infinite-scroll-disabled="busy"
-         infinite-scroll-distance="10">
-    </div>
-    <!--<div v-for="(item, index) in imgList" :key="index">
+    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+      <div v-for="(item, index) in imgList" :key="index">
       <el-alert
         :title="item.dayTime"
         type="info"
         :closable="false">
       </el-alert>
       <vue-preview :slides="item.imgList" @close="handleClose"></vue-preview>
-    </div>-->
+    </div>
+    </div>
   </div>
 </template>
 
@@ -22,29 +18,22 @@ import VuePreview from 'vue-preview'
 import Vue from 'vue'
 import ToImgList from '@/api/img'
 import util from '../../common/util'
-import Waterfall from 'vue-waterfall/lib/waterfall'
-import WaterfallSlot from 'vue-waterfall/lib/waterfall-slot'
 import infiniteScroll from 'vue-infinite-scroll'
 
 // defalut install
 Vue.use(VuePreview)
 Vue.use(infiniteScroll)
+
 export default {
   name: 'pic',
-  components: {
-    Waterfall,
-    WaterfallSlot
-  },
   data () {
     return {
       imgList: [],
       pagination: {
         pageNum: 1,
-        pageSize: 10
+        pageSize: 20
       },
-      busy: false,
-      data: [],
-      count: 0
+      busy: false
     }
   },
   methods: {
@@ -52,9 +41,11 @@ export default {
       console.log('close event')
     },
     getImgList () {
-      ToImgList().then(res => {
-        console.log(res.data)
-      }).catch((res) => {
+      ToImgList({ ...this.pagination }).then(res => {
+        // 数据全部加载完成
+        if (res.data.pageInfo.list.length < this.pagination.pageSize) {
+          this.busy = true
+        }
         console.log(res.data)
         let list = []
         res.data.list.forEach((item, index) => {
@@ -80,26 +71,24 @@ export default {
             o1['imgList'] = imgList
           }
           list.push(o1)
-          this.imgList = list
+          this.imgList = [ ...this.imgList, ...list ]
         })
         console.log(list)
+      }).catch((res) => {
+        console.log('获取图片列表失败')
       })
     },
-    loadMore: function () {
-      this.busy = true;
-      console.log('loading... ' + new Date());
-      setTimeout(function () {
-        this.count++
-        let app = document.querySelector('.infiniteScroll')
-        let height = app.clientHeight;
-        app.style.height = height + 300 + 'px';
-        console.log('end... ' + new Date());
+    loadMore () {
+      this.busy = true
+      window.setTimeout(() => {
+        this.getImgList()
+        this.pagination.pageNum++
         this.busy = false
       }, 1000)
     }
   },
   mounted () {
-    this.getImgList()
+    // this.getImgList()
   }
 }
 </script>
