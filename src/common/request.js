@@ -46,11 +46,6 @@ ajaxMethod.forEach((method) => {
           }
           // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
           if (response.data.code && response.data.code === 41000) {
-            ElementUI.Notification.error({
-              title: 'error',
-              message: response.data.msg,
-              duration: 2000
-            })
             window.setTimeout(() => {
               sessionStorage.removeItem('user');
               location.reload();
@@ -78,11 +73,6 @@ ajaxMethod.forEach((method) => {
           }
           // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
           if (response.data.code && response.data.code === 41000) {
-            ElementUI.Notification.error({
-              title: 'error',
-              message: response.data.msg,
-              duration: 2000
-            })
             window.setTimeout(() => {
               sessionStorage.removeItem('user');
               location.reload();
