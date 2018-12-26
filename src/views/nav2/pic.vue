@@ -56,7 +56,7 @@ export default {
             item[key].forEach((e) => {
               let o2 = {}
               if (e.mediaCachePath) {
-                o2['src'] = e.mediaCachePath
+                o2['src'] = `${res.data.nginxServer}/${e.filePath}`
                 o2['msrc'] = e.mediaCachePath
               } else {
                 o2['src'] = require('../../assets/file_ico/not_found.png')
@@ -64,15 +64,20 @@ export default {
               }
               o2['alt'] = e.fileRealName
               o2['title'] = e.fileRealName
-              o2['w'] = 1200
-              o2['h'] = 900
+              if (e.imgWidth && e.imgHeight) {
+                o2['w'] = e.imgWidth
+                o2['h'] = e.imgHeight
+              } else {
+                o2['w'] = 1200
+                o2['h'] = 900
+              }
               imgList.push(o2)
             })
             o1['imgList'] = imgList
           }
           list.push(o1)
-          this.imgList = [ ...this.imgList, ...list ]
         })
+        this.imgList = [ ...this.imgList, ...list ]
         console.log(list)
       }).catch((res) => {
         console.log('获取图片列表失败')
