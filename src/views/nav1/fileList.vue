@@ -84,7 +84,7 @@
       :with-credentials="true"
       multiple
       :auto-upload="false"
-      :limit="3"
+      :limit="uploadLimit"
       :on-exceed="handleExceed"
       :data="uploadData">
       <el-button size="small" type="primary">点击上传</el-button>
@@ -190,6 +190,7 @@ export default {
         md5Hex: '111',
         lastModifiedDate: null
       },
+      uploadLimit: 10,
       uploadAction: `${process.env.BASE_API}/file/fileUpload`,
       moveDialogVisible: false,
       dirDialogVisible: false,
@@ -382,7 +383,7 @@ export default {
     // 打开重命名对话框
     handleReName (index, row) {
       this.reNameDialogVisible = true
-      this.oldName = row.fileRealName
+      this.oldName = row.fileRealName.substring(0, row.isDir ? row.fileRealName.lastIndexOf('.') : row.fileRealName.length)
       this.reNameRow = {...row}
     },
     // 使鼠标变成手型
@@ -411,7 +412,7 @@ export default {
     },
     // 文件数量限制
     handleExceed (files, fileList) {
-      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+      this.$message.warning(`当前限制选择 ${this.uploadLimit} 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
     },
     // 在文件移除之前
     beforeRemove (file, fileList) {
@@ -459,7 +460,9 @@ export default {
     },
     // 文件列表改变时，选择文件后开始计算文件md5值
     onFileChange (file, fileList) {
-      GetFileMD5(file.raw, file.uid, this.filters.parentId, this)
+      if (file.status === 'ready') {
+        GetFileMD5(file.raw, file.uid, this.filters.parentId, this)
+      }
     },
     // 文件手动上传
     submitUpload () {
@@ -492,6 +495,7 @@ export default {
         })
         this.getFileList()
         this.dirDialogVisible = false
+        this.newDir = ''
       })
     },
     // 关闭新建文件夹对话框

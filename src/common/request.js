@@ -36,14 +36,11 @@ ajaxMethod.forEach((method) => {
           resolve(response);
         }).catch((response) => {
           reject(response)
-          // 检查服务器是否存在该MD5值
-          if (response.data.code !== 20033 && response.data.code !== 20034) {
-            ElementUI.Notification.error({
-              title: 'error',
-              message: response.status === 200 ? response.data.msg : `网络错误`,
-              duration: 2000
-            })
-          }
+          ElementUI.Notification.error({
+            title: 'error',
+            message: response.status === 200 ? response.data.msg : `网络错误`,
+            duration: 2000
+          })
           // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
           if (response.data.code && response.data.code === 41000) {
             window.setTimeout(() => {
@@ -63,14 +60,11 @@ ajaxMethod.forEach((method) => {
           resolve(response);
         }).catch((response) => {
           reject(response)
-          // 检查服务器是否存在该MD5值
-          if (response.data.code !== 20033 && response.data.code !== 20034) {
-            ElementUI.Notification.error({
-              title: 'error',
-              message: response.status === 200 ? response.data.msg : `网络错误`,
-              duration: 2000
-            })
-          }
+          ElementUI.Notification.error({
+            title: 'error',
+            message: response.status === 200 ? response.data.msg : `网络错误`,
+            duration: 2000
+          })
           // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
           if (response.data.code && response.data.code === 41000) {
             window.setTimeout(() => {

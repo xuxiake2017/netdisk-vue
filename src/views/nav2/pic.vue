@@ -45,6 +45,8 @@ export default {
         // 数据全部加载完成
         if (res.data.pageInfo.list.length < this.pagination.pageSize) {
           this.busy = true
+        } else {
+          this.busy = false
         }
         console.log(res.data)
         let list = []
@@ -88,7 +90,6 @@ export default {
       window.setTimeout(() => {
         this.getImgList()
         this.pagination.pageNum++
-        this.busy = false
       }, 1000)
     }
   },

@@ -46,15 +46,16 @@ export default function GetFileMD5 (file, uid, parentId, that) {
       console.log(md5Hex)
       if (md5Hex) {
         CheckMd5({md5Hex}).then(res => {
-        }).catch(res => {
-          console.log(res.data)
-          if (res.data.code === 20034) {
+          console.log(res)
+          if (res.data === 20034) {
             // 服务器存在该MD5值
-          } else if (res.data.code === 20033) {
+            isExist = true
+          } else if (res.data === 20033) {
             // 服务器不存在该MD5值
             isExist = false
           }
           that.$store.commit('storeFile', {uid, md5Hex, fileSize, fileRealName, lastModifiedDate, parentId, isExist})
+        }).catch(res => {
         })
       }
     }
