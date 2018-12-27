@@ -221,6 +221,8 @@ export default {
       switch (row.fileType) {
         case 0 :
           return require('../../assets/file_ico/Folder_24_e0cacad.png')
+        case 1 :
+          return require('../../assets/file_ico/Text_24_dd1b3d8.png')
         case 11 :
           return require('../../assets/file_ico/Word_24_1e078ab.png')
         case 12 :
@@ -265,6 +267,9 @@ export default {
       this.pathStore.splice(index + 1, this.pathStore.length - 1)
       this.filters.parentId = item.parentId
       this.getFileList()
+    },
+    getSublist (row, column, cell, event) {
+
     },
     getFileList2 () {
       this.getFileList()
@@ -383,7 +388,7 @@ export default {
     // 打开重命名对话框
     handleReName (index, row) {
       this.reNameDialogVisible = true
-      this.oldName = row.fileRealName.substring(0, row.isDir ? row.fileRealName.lastIndexOf('.') : row.fileRealName.length)
+      this.oldName = row.fileRealName.substring(0, row.isDir && row.fileExtName ? row.fileRealName.lastIndexOf('.') : row.fileRealName.length)
       this.reNameRow = {...row}
     },
     // 使鼠标变成手型
