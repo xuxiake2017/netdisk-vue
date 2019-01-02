@@ -7,3 +7,7 @@ export const RequestLogin = params => {
 export const Logout = params => {
   return post('user/logout', params, {stringify: false}).then(res => res.data)
 }
+
+export const GetInfo = params => {
+  return post('user/getInfo', params, {stringify: false}).then(res => res.data)
+}

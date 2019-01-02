@@ -2,12 +2,12 @@
 <section>
   <!--工具条-->
   <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
-    <el-form :inline="true" :model="filters">
+    <el-form :inline="true" :model="filters" @keyup.enter.native="getFileList">
       <el-form-item>
         <el-input v-model="filters.fileRealName" placeholder="文件名"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button plain type="primary" v-on:click.prevent="getFileList2">查询</el-button>
+        <el-button plain type="primary" v-on:click.prevent="getFileList">查询</el-button>
         <el-button plain type="primary" @click="handleReset">重置</el-button>
       </el-form-item>
       <el-form-item>
@@ -25,7 +25,7 @@
   <el-table :data="tableData.rows"
             highlight-current-row v-loading="listLoading"
             @selection-change="selsChange"
-            @cell-click="getFileList"
+            @cell-click="getSublist"
             :cell-style="showPointer"
             height="500px"
             style="width: 100%;">
@@ -114,7 +114,7 @@
   <el-dialog
     title="提示"
     :visible.sync="reNameDialogVisible"
-    :before-close="dirDialogClose"
+    :before-close="reNameDialogClose"
     width="30%">
     <el-input v-model="oldName" placeholder="请输入文件夹名称"></el-input>
     <span slot="footer" class="dialog-footer">
@@ -184,6 +184,7 @@ export default {
       },
       listLoading: false,
       sels: [], // 列表选中列
+      // 文件上传
       uploaDialogVisible: false,
       uploadData: {
         parentId: -1,
@@ -192,12 +193,15 @@ export default {
       },
       uploadLimit: 10,
       uploadAction: `${process.env.BASE_API}/file/fileUpload`,
+      // 文件移动
       moveDialogVisible: false,
-      dirDialogVisible: false,
       dirs: [],
-      newDir: '',
       movedFileSaveName: '',
       movedId: 0,
+      // 新建文件夹
+      dirDialogVisible: false,
+      newDir: '',
+      // 重命名
       reNameDialogVisible: false,
       oldName: '',
       reNameRow: null
@@ -269,22 +273,15 @@ export default {
       this.getFileList()
     },
     getSublist (row, column, cell, event) {
-
-    },
-    getFileList2 () {
-      this.getFileList()
+      if (row.fileType === 0 && column.property === 'fileRealName') {
+        this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
+        this.filters.fileRealName = ''
+        this.filters.parentId = row.id
+        this.getFileList()
+      }
     },
     // 获取文件列表
-    getFileList (row, column, cell, event) {
-      if (row) {
-        if (row.fileType === 0 && column.property === 'fileRealName') {
-          this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
-          this.filters.fileRealName = ''
-          this.filters.parentId = row.id
-        } else {
-          return
-        }
-      }
+    getFileList () {
       let param = {
         ...this.filters, ...this.tableData.pagination
       };
@@ -507,6 +504,10 @@ export default {
     dirDialogClose () {
       this.newDir = ''
       this.dirDialogVisible = false
+    },
+    reNameDialogClose (done) {
+      console.log('reNameDialogClose')
+      done()
     },
     // 移动文件
     moveFile () {

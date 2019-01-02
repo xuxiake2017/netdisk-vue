@@ -1,8 +1,7 @@
 import Login from '../views/Login.vue'
 import NotFound from '../views/404.vue'
 import Home from '../views/Home.vue'
-// import Main from '../views/Main.vue'
-import fileList from '../views/nav1/fileList.vue'
+import allFile from '../views/nav1/allFile.vue'
 import Document from '../views/nav1/document.vue'
 import Music from '../views/nav1/music.vue'
 import Video from '../views/nav1/video.vue'
@@ -10,6 +9,11 @@ import Pic from '../views/nav2/pic.vue'
 import Statistical from '../views/charts/statistical.vue'
 import Vue from 'vue'
 import Router from 'vue-router'
+import { getToken } from '../common/auth'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+import store from '../store'
+import { GetInfo } from '../api/user'
 
 let routes = [
   {
@@ -31,7 +35,7 @@ let routes = [
     name: '文件列表',
     iconCls: 'el-icon-document', // 图标样式class
     children: [
-      { path: '/fileList', component: fileList, name: '所有文件' },
+      { path: '/allFile', component: allFile, name: '所有文件' },
       { path: '/document', component: Document, name: '文档' },
       { path: '/video', component: Video, name: '视频' },
       { path: '/music', component: Music, name: '音乐' }
@@ -69,16 +73,33 @@ const router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-  // NProgress.start();
-  if (to.path === '/login') {
-    sessionStorage.removeItem('user');
-  }
-  let user = JSON.parse(sessionStorage.getItem('user'));
-  if (!user && to.path !== '/login') {
-    next({ path: '/login' })
+  NProgress.start();
+  const token = getToken()
+  if (token) {
+    if (to.path === '/login') {
+      next({ path: '/allFile' })
+    } else {
+      const user = store.getters.getUser
+      if (user) {
+        next()
+      } else {
+        GetInfo().then(res => {
+          store.commit('storeUser', res.data)
+          next()
+        })
+      }
+    }
   } else {
-    next()
+    if (to.path === '/login') {
+      next()
+    } else {
+      next({ path: '/login' })
+    }
   }
+})
+
+router.afterEach(() => {
+  NProgress.done()
 })
 
 export default router

@@ -4,7 +4,7 @@
       <div v-for="(item, index) in imgList" :key="index">
       <el-alert
         :title="item.dayTime"
-        type="info"
+        :type="alertTypes[index % alertTypes.length]"
         :closable="false">
       </el-alert>
       <vue-preview :slides="item.imgList" @close="handleClose"></vue-preview>
@@ -33,7 +33,13 @@ export default {
         pageNum: 1,
         pageSize: 20
       },
-      busy: false
+      busy: false,
+      alertTypes: [
+        'success',
+        'info',
+        'warning',
+        'error'
+      ]
     }
   },
   methods: {

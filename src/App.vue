@@ -62,4 +62,8 @@ export default {
   .fade-leave-active {
     opacity: 0;
   }
+
+  #nprogress .bar {
+    background: coral !important; //自定义颜色
+  }
 </style>

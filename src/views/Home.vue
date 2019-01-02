@@ -99,8 +99,7 @@ export default {
         // type: 'warning'
       }).then(() => {
         Logout().then(res => {
-          sessionStorage.removeItem('user');
-          // _this.$router.push('/login');
+          this.$store.commit('delUser')
           location.reload();
         })
       }).catch(() => {
@@ -109,15 +108,11 @@ export default {
     // 折叠导航栏
     collapse: function () {
       this.collapsed = !this.collapsed;
-    },
-    showMenu (i, status) {
-      this.$refs.menuCollapsed.getElementsByClassName('submenu-hook-' + i)[0].style.display = status ? 'block' : 'none';
     }
   },
   mounted () {
-    var user = sessionStorage.getItem('user');
+    const user = this.$store.getters.getUser
     if (user) {
-      user = JSON.parse(user);
       this.sysUserName = user.name || '';
       this.sysUserAvatar = user.avatar || '';
     }

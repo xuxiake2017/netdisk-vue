@@ -1,5 +1,5 @@
 <template>
-<el-form :model="ruleForm2" :rules="rules2" ref="ruleForm2" label-position="left" label-width="0px" class="demo-ruleForm login-container">
+<el-form :model="ruleForm2" :rules="rules2" ref="ruleForm2" label-position="left" label-width="0px" class="demo-ruleForm login-container" @keyup.enter.native="handleSubmit2">
   <h3 class="title">系统登录</h3>
   <el-form-item prop="loginInfo">
     <el-input type="text" v-model="ruleForm2.loginInfo" auto-complete="off" placeholder="账号"></el-input>
@@ -23,6 +23,7 @@
 
 <script>
 import { RequestLogin } from '../api/user';
+import { setToken } from '../common/auth'
 // import NProgress from 'nprogress'
 export default {
   data () {
@@ -65,8 +66,10 @@ export default {
           RequestLogin(loginParams).then(data => {
             this.logining = false;
             // NProgress.done();
-            sessionStorage.setItem('user', JSON.stringify(data.data));
-            this.$router.push({ path: '/fileList' });
+            this.$store.commit('storeUser', data.data)
+            setToken(data.data.token)
+            // sessionStorage.setItem('user', JSON.stringify(data.data));
+            this.$router.push({ path: '/allFile' });
           }).catch(reason => {
             this.logining = false;
           })
