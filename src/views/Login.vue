@@ -68,7 +68,6 @@ export default {
             // NProgress.done();
             this.$store.commit('storeUser', data.data)
             setToken(data.data.token)
-            // sessionStorage.setItem('user', JSON.stringify(data.data));
             this.$router.push({ path: '/allFile' });
           }).catch(reason => {
             this.logining = false;

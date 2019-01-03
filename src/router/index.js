@@ -1,12 +1,13 @@
 import Login from '../views/Login.vue'
 import NotFound from '../views/404.vue'
 import Home from '../views/Home.vue'
-import allFile from '../views/nav1/allFile.vue'
-import Document from '../views/nav1/document.vue'
-import Music from '../views/nav1/music.vue'
-import Video from '../views/nav1/video.vue'
-import Pic from '../views/nav2/pic.vue'
+import allFile from '../views/file/allFile.vue'
+import Document from '../views/file/document.vue'
+import Music from '../views/file/music.vue'
+import Video from '../views/file/video.vue'
+import Pic from '../views/pic/pic.vue'
 import Statistical from '../views/charts/statistical.vue'
+import UserInfo from '../views/user/userInfo'
 import Vue from 'vue'
 import Router from 'vue-router'
 import { getToken } from '../common/auth'
@@ -60,6 +61,15 @@ let routes = [
     ]
   },
   {
+    path: '/',
+    component: Home,
+    name: '我的信息',
+    iconCls: 'fa fa-user',
+    children: [
+      { path: '/userInfo', component: UserInfo, name: '我的信息' }
+    ]
+  },
+  {
     path: '*',
     hidden: true,
     redirect: { path: '/404' }
@@ -86,6 +96,9 @@ router.beforeEach((to, from, next) => {
         GetInfo().then(res => {
           store.commit('storeUser', res.data)
           next()
+        }).catch(res => {
+          store.commit('delUser')
+          next({ path: '/login' })
         })
       }
     }

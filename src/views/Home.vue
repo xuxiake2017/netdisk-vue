@@ -3,6 +3,7 @@
   <el-col :span="24" class="header">
     <el-col :span="10" class="logo" :class="collapsed?'logo-collapse-width':'logo-width'">
       {{collapsed?'':sysName}}
+      <img src="../assets/logo.png"/>
     </el-col>
     <el-col :span="10">
       <div class="tools" @click.prevent="collapse">
@@ -13,7 +14,7 @@
       <el-dropdown trigger="hover">
         <span class="el-dropdown-link userinfo-inner"><img :src="this.sysUserAvatar" /> {{sysUserName}}</span>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item>我的消息</el-dropdown-item>
+          <el-dropdown-item @click.native="toUserInfo">我的信息</el-dropdown-item>
           <el-dropdown-item>设置</el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">退出登录</el-dropdown-item>
         </el-dropdown-menu>
@@ -39,14 +40,6 @@
     </aside>
     <section class="content-container">
       <div class="grid-content bg-purple-light">
-        <!--<el-col :span="24" class="breadcrumb-container">
-          <strong class="title">{{$route.name}}</strong>
-          <el-breadcrumb separator="/" class="breadcrumb-inner">
-            <el-breadcrumb-item v-for="item in $route.matched" :key="item.path">
-              {{ item.name }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
-        </el-col>-->
         <el-col :span="24" class="content-wrapper">
           <transition name="fade" mode="out-in">
             <router-view></router-view>
@@ -67,17 +60,7 @@ export default {
       sysName: 'NETDISK-VUE',
       collapsed: false,
       sysUserName: '',
-      sysUserAvatar: '',
-      form: {
-        name: '',
-        region: '',
-        date1: '',
-        date2: '',
-        delivery: false,
-        type: [],
-        resource: '',
-        desc: ''
-      }
+      sysUserAvatar: ''
     }
   },
   methods: {
@@ -104,6 +87,9 @@ export default {
         })
       }).catch(() => {
       });
+    },
+    toUserInfo () {
+      this.$router.push('/userInfo')
     },
     // 折叠导航栏
     collapse: function () {
@@ -154,15 +140,17 @@ export default {
       //width:230px;
       height:60px;
       font-size: 22px;
-      padding-left:20px;
-      padding-right:20px;
+      padding-left:10px;
+      padding-right:10px;
       border-color: rgba(238,241,146,0.3);
       border-right-width: 1px;
       border-right-style: solid;
       img {
         width: 40px;
         float: left;
-        margin: 10px 10px 10px 18px;
+        margin: 10px 10px 10px 0px;
+        border-radius: 20px;
+        box-shadow:1px 1px 5px #333333;
       }
       .txt {
         color:#fff;
