@@ -1,8 +1,9 @@
-import { checkPhone, checkEmail } from '@/utils/validate'
+import { checkPhone, checkEmail } from '../../common/validate'
 
 export default {
   avatar: [{ required: true, message: '请上传用户头像' }],
-  name: [{ required: true, message: '请填写真实姓名' }],
+  username: [{ required: true, message: '请填写用户名' }],
+  realName: [{ required: true, message: '请填写真实姓名' }],
   email: [
     {
       validator: checkEmail,
@@ -10,7 +11,7 @@ export default {
       trigger: 'blur'
     }
   ],
-  mobile: [
+  phone: [
     {
       validator: checkPhone,
       message: '联系电话格式不正确，请输入正确的中国大陆手机号或本地固定电话',

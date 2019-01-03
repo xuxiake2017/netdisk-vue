@@ -5,9 +5,17 @@ export const RequestLogin = params => {
 }
 
 export const Logout = params => {
-  return post('user/logout', params, {stringify: false}).then(res => res.data)
+  return post('user/logout', params).then(res => res.data)
 }
 
 export const GetInfo = params => {
-  return post('user/getInfo', params, {stringify: false}).then(res => res.data)
+  return post('user/getInfo', params).then(res => res.data)
+}
+
+export const Detail = params => {
+  return post('user/detail', params).then(res => res.data)
+}
+
+export const Update = params => {
+  return post('user/update', params, {stringify: false}).then(res => res.data)
 }

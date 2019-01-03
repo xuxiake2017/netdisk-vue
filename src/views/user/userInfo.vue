@@ -1,22 +1,29 @@
 <template>
   <div>
-    <el-form ref="form" :model="form" label-width="80px">
+    <el-form ref="form" :model="form" label-width="80px" :rules="rules">
       <el-row>
-        <el-form-item label="头像" prop="avatar">
-          <el-upload
-            class="avatar-uploader"
-            :action="uploadAction"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload">
-            <img v-if="form.avatar" :src="form.avatar" class="avatar">
-            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-          </el-upload>
-        </el-form-item>
+        <el-col :span="8">
+          <el-form-item label="头像" prop="avatar">
+            <el-upload
+              class="avatar-uploader"
+              :action="uploadAction"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="form.avatar" :src="form.avatar" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="用户类型" prop="">
+            <el-tag :type="labelType(form.userStatus)">{{statusLabels(form.userStatus)}}</el-tag>
+          </el-form-item>
+        </el-col>
       </el-row>
       <el-row>
         <el-col :span="8">
-          <el-form-item label="用户名" prop="name">
+          <el-form-item label="用户名" prop="username">
             <el-input v-model="form.username"></el-input>
           </el-form-item>
         </el-col>
@@ -41,14 +48,42 @@
           </el-form-item>
         </el-col>
       </el-row>
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="form.email"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="电话" prop="phone">
+            <el-input v-model="form.phone"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="总容量" prop="totalMemory">
+            <el-input v-model="form.totalMemory" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="可用容量" prop="availableMemory">
+            <el-input v-model="availableMemory" disabled></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit">立即创建</el-button>
-        <el-button>取消</el-button>
+        <el-button type="primary" @click="onSubmit">提交</el-button>
+        <el-button @click="goBack">取消</el-button>
       </el-form-item>
     </el-form>
   </div>
 </template>
 <script>
+import { Detail,Update } from '../../api/user'
+import util from '../../common/util'
+import Rules from './rules'
+
 export default {
   data () {
     return {
@@ -63,11 +98,42 @@ export default {
         usedMemory: '',
         phone: '',
         email: '',
-        avatar: 'http://192.168.3.3/upload/image/FengLing_princess.jpg'
-      }
+        avatar: 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+        userStatus: 0
+      },
+      availableMemory: null,
+      rules: Rules
     }
   },
   methods: {
+    userDetail () {
+      Detail().then(res => {
+        this.form = res.data
+        this.availableMemory = parseInt(this.form.totalMemory) - parseInt(this.form.usedMemory)
+        this.availableMemory = util.formatFileSize(this.availableMemory)
+        this.form.totalMemory = util.formatFileSize(this.form.totalMemory)
+      })
+    },
+    labelType (userStatus) {
+      switch (userStatus) {
+        case '0':
+          return 'primary'
+        case '2':
+          return 'success'
+        default:
+          break
+      }
+    },
+    statusLabels (userStatus) {
+      switch (userStatus) {
+        case '0':
+          return '普通用户'
+        case '2':
+          return 'VIP用户'
+        default:
+          break
+      }
+    },
     handleAvatarSuccess (res, file) {
       this.imageUrl = URL.createObjectURL(file.raw);
     },
@@ -84,8 +150,37 @@ export default {
       return isJPG && isLt2M;
     },
     onSubmit () {
-      console.log('submit!');
+      this.$refs.form.validate(valid => {
+        if (valid) {
+          Update(this.form).then(res => {
+            this.$confirm('修改成功, 是否返回首页?', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'success'
+            }).then(() => {
+              this.$router.push({ path: '/allFile' })
+            })
+          }).catch(() => {
+            console.log('用户详情保存失败')
+          })
+        } else {
+          this.$notify({
+            title: '失败',
+            duration: '2000',
+            message: '填写信息有误，请优化后再提交!',
+            type: 'error'
+          })
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+    goBack () {
+      this.$router.go(-1)
     }
+  },
+  mounted () {
+    this.userDetail()
   }
 }
 </script>

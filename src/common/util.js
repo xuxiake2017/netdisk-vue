@@ -52,21 +52,19 @@ export default {
         return _date;
       }
       return null;
-    },
-    formatFileSize: function (fileSize) {
-      if (fileSize) {
-        if (fileSize > 1024 * 1024) {
-          fileSize = fileSize / (1024 * 1024);
-          return fileSize.toFixed(2) + 'M';
-        } else {
-          fileSize = fileSize / 1024;
-          return fileSize.toFixed(2) + 'KB';
-        }
-      } else {
-        return '--';
-      }
     }
-
+  },
+  formatFileSize: function (fileSize) {
+    if (fileSize) {
+      if (fileSize > 1024 * 1024) {
+        fileSize = fileSize / (1024 * 1024);
+        return fileSize.toFixed(2) + 'M';
+      } else {
+        fileSize = fileSize / 1024;
+        return fileSize.toFixed(2) + 'KB';
+      }
+    } else {
+      return '--';
+    }
   }
-
 };

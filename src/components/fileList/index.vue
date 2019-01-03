@@ -149,7 +149,7 @@ export default {
     },
     // 格式化文件大小
     formatFileSize: function (row, column) {
-      return util.formatDate.formatFileSize(row.fileSize)
+      return util.formatFileSize(row.fileSize)
     },
     // 格式化文件时间
     formatFileTime (row) {
