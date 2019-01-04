@@ -218,19 +218,8 @@ export default {
       // top: 0px;
       // bottom: 0px;
       // left: 230px;
-      overflow-y: scroll;
+      /*overflow-y: scroll;*/
       padding: 20px;
-      .breadcrumb-container {
-        //margin-bottom: 15px;
-        .title {
-          width: 200px;
-          float: left;
-          color: #475669;
-        }
-        .breadcrumb-inner {
-          float: right;
-        }
-      }
       .content-wrapper {
         background-color: #fff;
         box-sizing: border-box;

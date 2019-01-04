@@ -44,10 +44,10 @@ export default {
   }
 
   .toolbar {
-    background: #f2f2f2;
+    background: #ffffff;
     padding: 10px;
     //border:1px solid #dfe6ec;
-    margin: 10px 0px;
+    /*margin: 10px 10px;*/
     .el-form-item {
       margin-bottom: 10px;
     }

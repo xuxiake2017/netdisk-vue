@@ -14,11 +14,11 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "js-cookie": "2.2.0",
     "axios": "0.17.1",
     "echarts": "^4.2.0-rc.1",
     "element-ui": "2.4.8",
     "font-awesome": "^4.7.0",
+    "js-cookie": "2.2.0",
     "node-sass": "^4.10.0",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",

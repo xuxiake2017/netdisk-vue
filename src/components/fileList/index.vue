@@ -6,8 +6,7 @@
               @selection-change="selsChange"
               @cell-click="getSublist"
               :cell-style="showPointer"
-              height="500px"
-              style="width: 100%;">
+              class="table-list">
       <el-table-column type="selection" width="55">
       </el-table-column>
       <el-table-column type="index" width="60">
@@ -228,5 +227,27 @@ export default {
 </script>
 
 <style scoped>
-
+  .table-list {
+    width: 100%;
+    overflow-y: auto;
+    height: 756px;
+  }
+  /*滚动条整体样式*/
+  /*高宽分别对应横竖滚动条的尺寸*/
+  .table-list::-webkit-scrollbar {
+    width: 10px;
+    height: 1px;
+  }
+  /*滚动条里面小方块*/
+  .table-list::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: #535353;
+  }
+  /*滚动条里面轨道*/
+  .table-list::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    background: #EDEDED;
+  }
 </style>

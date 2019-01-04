@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="img-list">
       <div v-for="(item, index) in imgList" :key="index">
       <el-alert
         :title="item.dayTime"
@@ -112,5 +112,30 @@ export default {
   .my-gallery figure {
     display: inline-block;
     margin: 10px;
+  }
+</style>
+<style scoped>
+  .img-list {
+    width: 100%;
+    overflow-y: auto;
+    height: 756px;
+  }
+  /*滚动条整体样式*/
+  /*高宽分别对应横竖滚动条的尺寸*/
+  .img-list::-webkit-scrollbar {
+    width: 10px;
+    height: 1px;
+  }
+  /*滚动条里面小方块*/
+  .img-list::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: #535353;
+  }
+  /*滚动条里面轨道*/
+  .img-list::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    background: #EDEDED;
   }
 </style>

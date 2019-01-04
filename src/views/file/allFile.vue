@@ -1,7 +1,7 @@
 <template>
   <div>
     <!--工具条-->
-    <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
+    <el-col :span="24" class="toolbar">
       <el-form :inline="true" :model="filters" @keyup.enter.native="handleSearch">
         <el-form-item>
           <el-input v-model="filters.fileRealName" placeholder="文件名"></el-input>
@@ -17,7 +17,7 @@
       </el-form>
     </el-col>
 
-    <el-breadcrumb separator="/">
+    <el-breadcrumb separator="/" style="padding: 10px;">
       <el-breadcrumb-item v-for="(item, index) in pathStore" :key="item.parentId" @click.native="jump(item, index)" style="cursor: pointer; font-weight: bold">{{item.fileRealName}}</el-breadcrumb-item>
     </el-breadcrumb>
     <file-list
@@ -25,8 +25,9 @@
       :filters="filters"
       :list-loading="listLoading"
       :searching="searching"
+      :busy="busy"
       @handle-current-change="handleCurrentChange"
-      @reacquire-data="getFileList"
+      @reacquire-data="reacquireData"
       @get-sublist="getSublist"
       @file-move="handleMove"
     >
@@ -114,6 +115,9 @@ import GetFileMD5 from '../../common/getFileMD5'
 
 export default {
   name: 'allFile',
+  components: {
+    FileList
+  },
   data () {
     return {
       pathStore: [
@@ -127,7 +131,7 @@ export default {
         pagination: {
           total: 0,
           pageNum: 1,
-          pageSize: 10
+          pageSize: 20
         },
         rows: []
       },
@@ -149,10 +153,10 @@ export default {
       // 新建文件夹
       dirDialogVisible: false,
       newDir: '',
-      searching: false
+      searching: false,
+      busy: false
     }
   },
-  components: {FileList},
   methods: {
     // 搜索
     handleSearch () {
@@ -170,17 +174,31 @@ export default {
       this.pathStore.splice(1, this.pathStore.length)
       this.getFileList();
     },
+    reacquireData () {
+      console.log('reacquireData')
+      this.getFileList();
+      this.tableData.pagination.pageNum++;
+    },
     // 获取文件列表
     getFileList () {
+      // debugger
       let param = {
         ...this.filters, ...this.tableData.pagination
       };
       this.listLoading = true;
       // NProgress.start();
       GetFileList(param).then((res) => {
-        this.tableData.pagination.total = res.data.pageInfo.total;
-        this.tableData.pagination.pageNum = res.data.pageInfo.pageNum;
-        this.tableData.rows = res.data.pageInfo.list;
+        // debugger
+        // 数据全部加载完成
+        if (res.data.pageInfo.list.length < this.tableData.pagination.pageSize) {
+          this.busy = true
+        } else {
+          this.busy = false
+        }
+        // this.tableData.pagination.total = res.data.pageInfo.total;
+        // this.tableData.pagination.pageNum = res.data.pageInfo.pageNum;
+        this.tableData.rows = [ ...this.tableData.rows, ...res.data.pageInfo.list ]
+        console.log('this.tableData.rows', this.tableData.rows)
         this.listLoading = false;
         // NProgress.done();
       }).catch(reason => {
@@ -198,8 +216,8 @@ export default {
       }
     },
     // 分页页码改变
-    handleCurrentChange (pageNum) {
-      this.tableData.pagination.pageNum = pageNum;
+    handleCurrentChange () {
+      this.tableData.pagination.pageNum++;
       this.getFileList();
     },
     // 文件路径跳转
@@ -415,12 +433,20 @@ export default {
         this.moveDialogVisible = false
         this.getFileList()
       })
+    },
+    loadMore () {
+      this.busy = true
+      window.setTimeout(() => {
+        this.getFileList()
+        this.tableData.pagination.pageNum++
+      }, 1000)
     }
   },
   mounted () {
     this.getFileList()
   }
 }
+
 </script>
 
 <style scoped>

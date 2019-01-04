@@ -80,7 +80,7 @@
   </div>
 </template>
 <script>
-import { Detail,Update } from '../../api/user'
+import { Detail, Update } from '../../api/user'
 import util from '../../common/util'
 import Rules from './rules'
 
