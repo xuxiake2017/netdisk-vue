@@ -6,7 +6,9 @@
               @selection-change="selsChange"
               @cell-click="getSublist"
               :cell-style="showPointer"
-              class="table-list">
+              class="table-list"
+              :style="{height: computeHeight + 'px'}"
+              :row-class-name="tableRowClassName">
       <el-table-column type="selection" width="55">
       </el-table-column>
       <el-table-column type="index" width="60">
@@ -70,6 +72,7 @@
 <script>
 import util from '../../common/util'
 import { ReName } from '../../api/file'
+import $ from 'jquery'
 
 export default {
   name: 'fileList',
@@ -182,6 +185,33 @@ export default {
       }
       return ''
     },
+    // 给表格行加class（表格行的颜色）
+    tableRowClassName ({row, rowIndex}) {
+      switch (rowIndex) {
+        case 1:
+          return 'warning-row'
+        case 3:
+          return 'success-row'
+        case 5:
+          return 'warning-row'
+        case 7:
+          return 'success-row'
+        case 9:
+          return 'warning-row'
+        case 11:
+          return 'success-row'
+        case 13:
+          return 'warning-row'
+        case 15:
+          return 'success-row'
+        case 17:
+          return 'warning-row'
+        case 19:
+          return 'success-row'
+        default:
+          return ''
+      }
+    },
     // 批量删除
     batchRemove () {},
     // 重命名
@@ -221,6 +251,11 @@ export default {
         this.$emit('get-sublist', row, column, cell, event)
       }
     }
+  },
+  computed: {
+    computeHeight () {
+      return $(document).height() - 240
+    }
   }
 }
 
@@ -230,7 +265,7 @@ export default {
   .table-list {
     width: 100%;
     overflow-y: auto;
-    height: 756px;
+    /*height: 756px;*/
   }
   /*滚动条整体样式*/
   /*高宽分别对应横竖滚动条的尺寸*/

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="img-list">
+    <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="img-list" :style="{height: computeHeight + 'px'}">
       <div v-for="(item, index) in imgList" :key="index">
       <el-alert
         :title="item.dayTime"
@@ -19,6 +19,7 @@ import Vue from 'vue'
 import ToImgList from '@/api/img'
 import util from '../../common/util'
 import infiniteScroll from 'vue-infinite-scroll'
+import $ from 'jquery'
 
 // defalut install
 Vue.use(VuePreview)
@@ -54,7 +55,6 @@ export default {
         } else {
           this.busy = false
         }
-        console.log(res.data)
         let list = []
         res.data.list.forEach((item, index) => {
           let o1 = {}
@@ -86,7 +86,6 @@ export default {
           list.push(o1)
         })
         this.imgList = [ ...this.imgList, ...list ]
-        console.log(list)
       }).catch((res) => {
         console.log('获取图片列表失败')
       })
@@ -101,6 +100,11 @@ export default {
   },
   mounted () {
     // this.getImgList()
+  },
+  computed: {
+    computeHeight () {
+      return $(document).height() - 80
+    }
   }
 }
 </script>
@@ -118,7 +122,6 @@ export default {
   .img-list {
     width: 100%;
     overflow-y: auto;
-    height: 756px;
   }
   /*滚动条整体样式*/
   /*高宽分别对应横竖滚动条的尺寸*/

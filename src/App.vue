@@ -63,7 +63,17 @@ export default {
     opacity: 0;
   }
 
+  /*nprogress进度条的颜色*/
   #nprogress .bar {
     background: coral !important; //自定义颜色
+  }
+
+  /*表格行的颜色*/
+  .table-list .warning-row {
+    background: oldlace;
+  }
+
+  .table-list .success-row {
+    background: #f0f9eb;
   }
 </style>

@@ -7,7 +7,7 @@
           <el-input v-model="filters.fileRealName" placeholder="文件名"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button plain type="primary" v-on:click.prevent="handleSearch">查询</el-button>
+          <el-button plain type="primary" @click="handleSearch">查询</el-button>
           <el-button plain type="primary" @click="handleReset">重置</el-button>
         </el-form-item>
         <el-form-item>
@@ -25,9 +25,8 @@
       :filters="filters"
       :list-loading="listLoading"
       :searching="searching"
-      :busy="busy"
       @handle-current-change="handleCurrentChange"
-      @reacquire-data="reacquireData"
+      @reacquire-data="getFileList"
       @get-sublist="getSublist"
       @file-move="handleMove"
     >
@@ -153,8 +152,7 @@ export default {
       // 新建文件夹
       dirDialogVisible: false,
       newDir: '',
-      searching: false,
-      busy: false
+      searching: false
     }
   },
   methods: {
@@ -174,11 +172,6 @@ export default {
       this.pathStore.splice(1, this.pathStore.length)
       this.getFileList();
     },
-    reacquireData () {
-      console.log('reacquireData')
-      this.getFileList();
-      this.tableData.pagination.pageNum++;
-    },
     // 获取文件列表
     getFileList () {
       // debugger
@@ -195,10 +188,10 @@ export default {
         } else {
           this.busy = false
         }
-        // this.tableData.pagination.total = res.data.pageInfo.total;
-        // this.tableData.pagination.pageNum = res.data.pageInfo.pageNum;
-        this.tableData.rows = [ ...this.tableData.rows, ...res.data.pageInfo.list ]
-        console.log('this.tableData.rows', this.tableData.rows)
+        this.tableData.pagination.total = res.data.pageInfo.total;
+        this.tableData.pagination.pageNum = res.data.pageInfo.pageNum;
+        // this.tableData.rows = [ ...this.tableData.rows, ...res.data.pageInfo.list ]
+        this.tableData.rows = res.data.pageInfo.list
         this.listLoading = false;
         // NProgress.done();
       }).catch(reason => {
@@ -216,9 +209,9 @@ export default {
       }
     },
     // 分页页码改变
-    handleCurrentChange () {
-      this.tableData.pagination.pageNum++;
-      this.getFileList();
+    handleCurrentChange (val) {
+      this.tableData.pagination.pageNum = val
+      this.getFileList()
     },
     // 文件路径跳转
     jump (item, index) {
@@ -433,13 +426,6 @@ export default {
         this.moveDialogVisible = false
         this.getFileList()
       })
-    },
-    loadMore () {
-      this.busy = true
-      window.setTimeout(() => {
-        this.getFileList()
-        this.tableData.pagination.pageNum++
-      }, 1000)
     }
   },
   mounted () {
@@ -450,5 +436,7 @@ export default {
 </script>
 
 <style scoped>
-
+  .el-breadcrumb::after {
+     clear: none;
+  }
 </style>

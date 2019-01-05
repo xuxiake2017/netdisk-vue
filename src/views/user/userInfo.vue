@@ -9,7 +9,8 @@
               :action="uploadAction"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
-              :before-upload="beforeAvatarUpload">
+              :before-upload="beforeAvatarUpload"
+              :with-credentials="true">
               <img v-if="form.avatar" :src="form.avatar" class="avatar">
               <i v-else class="el-icon-plus avatar-uploader-icon"></i>
             </el-upload>
@@ -87,7 +88,7 @@ import Rules from './rules'
 export default {
   data () {
     return {
-      uploadAction: '',
+      uploadAction: `${process.env.BASE_API}/user/uploadAvatar`,
       form: {
         id: null,
         username: '',
@@ -135,7 +136,7 @@ export default {
       }
     },
     handleAvatarSuccess (res, file) {
-      this.imageUrl = URL.createObjectURL(file.raw);
+      this.form.avatar = res.data
     },
     beforeAvatarUpload (file) {
       const isJPG = file.type === 'image/jpeg';
