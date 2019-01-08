@@ -174,20 +174,12 @@ export default {
     },
     // 获取文件列表
     getFileList () {
-      // debugger
       let param = {
         ...this.filters, ...this.tableData.pagination
       };
       this.listLoading = true;
       // NProgress.start();
       GetFileList(param).then((res) => {
-        // debugger
-        // 数据全部加载完成
-        if (res.data.pageInfo.list.length < this.tableData.pagination.pageSize) {
-          this.busy = true
-        } else {
-          this.busy = false
-        }
         this.tableData.pagination.total = res.data.pageInfo.total;
         this.tableData.pagination.pageNum = res.data.pageInfo.pageNum;
         // this.tableData.rows = [ ...this.tableData.rows, ...res.data.pageInfo.list ]
