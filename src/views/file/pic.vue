@@ -19,7 +19,7 @@
       :searching="searching"
       @handle-current-change="handleCurrentChange"
       @reacquire-data="getDocumentList"
-      type="document"
+      type="pic"
     >
     </file-list>
   </div>
@@ -27,10 +27,9 @@
 
 <script>
 import FileList from '../../components/fileList'
-import { GetDocumentList } from '../../api/file'
+import { GetPicList } from '../../api/file'
 
 export default {
-  name: 'document',
   data () {
     return {
       filters: {
@@ -70,7 +69,7 @@ export default {
       };
       this.listLoading = true;
       // NProgress.start();
-      GetDocumentList(param).then((res) => {
+      GetPicList(param).then((res) => {
         this.tableData.pagination.total = res.data.total;
         this.tableData.pagination.pageNum = res.data.pageNum;
         this.tableData.rows = res.data.list;

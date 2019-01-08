@@ -2,7 +2,7 @@
   <div>
     <!--工具条-->
     <el-col :span="24" class="toolbar">
-      <el-form :inline="true" :model="filters" @keyup.enter.native="handleSearch">
+      <el-form :inline="true" :model="filters" @submit.native.prevent @keyup.enter.native="handleSearch">
         <el-form-item>
           <el-input v-model="filters.fileRealName" placeholder="文件名"></el-input>
         </el-form-item>

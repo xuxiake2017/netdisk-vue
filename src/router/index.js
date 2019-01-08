@@ -5,9 +5,12 @@ import allFile from '../views/file/allFile.vue'
 import Document from '../views/file/document.vue'
 import Music from '../views/file/music.vue'
 import Video from '../views/file/video.vue'
-import Pic from '../views/pic/pic.vue'
+import Pic from '../views/file/pic.vue'
+import Album from '../views/pic/pic.vue'
 import Statistical from '../views/charts/statistical.vue'
 import UserInfo from '../views/user/userInfo'
+import ShareList from '../views/share/shareList'
+import RecycleList from '../views/recycle/recycleList'
 import Vue from 'vue'
 import Router from 'vue-router'
 import { getToken } from '../common/auth'
@@ -34,12 +37,33 @@ let routes = [
     path: '/',
     component: Home,
     name: '文件列表',
-    iconCls: 'el-icon-document', // 图标样式class
+    iconCls: 'fa fa-file', // 图标样式class
     children: [
       { path: '/allFile', component: allFile, name: '所有文件' },
       { path: '/document', component: Document, name: '文档' },
       { path: '/video', component: Video, name: '视频' },
-      { path: '/music', component: Music, name: '音乐' }
+      { path: '/music', component: Music, name: '音乐' },
+      { path: '/pic', component: Pic, name: '图片' }
+    ]
+  },
+  {
+    path: '/',
+    component: Home,
+    name: '回收站',
+    iconCls: 'fa fa-trash-o',
+    leaf: true,
+    children: [
+      { path: '/recycleList', component: RecycleList, name: '回收站' }
+    ]
+  },
+  {
+    path: '/',
+    component: Home,
+    name: '分享列表',
+    iconCls: 'fa fa-share-alt',
+    leaf: true,
+    children: [
+      { path: '/shareList', component: ShareList, name: '分享列表' }
     ]
   },
   {
@@ -47,8 +71,9 @@ let routes = [
     component: Home,
     name: '相册',
     iconCls: 'fa fa-picture-o',
+    leaf: true,
     children: [
-      { path: '/pic', component: Pic, name: '相册' }
+      { path: '/album', component: Album, name: '相册' }
     ]
   },
   {
@@ -56,6 +81,7 @@ let routes = [
     component: Home,
     name: '统计',
     iconCls: 'fa fa-bar-chart',
+    leaf: true,
     children: [
       { path: '/statistical', component: Statistical, name: '统计' }
     ]
@@ -65,6 +91,7 @@ let routes = [
     component: Home,
     name: '我的信息',
     iconCls: 'fa fa-user',
+    leaf: true,
     children: [
       { path: '/userInfo', component: UserInfo, name: '我的信息' }
     ]
@@ -89,6 +116,9 @@ router.beforeEach((to, from, next) => {
     if (to.path === '/login') {
       next({ path: '/allFile' })
     } else {
+      if (to.path === '/') {
+        next({path: '/allFile'})
+      }
       const user = store.getters.getUser
       if (user) {
         next()

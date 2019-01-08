@@ -31,3 +31,15 @@ export const ReName = params => {
 export const GetDocumentList = params => {
   return post('file/getDocumentList', params, {stringify: true}).then(res => res.data)
 }
+
+export const GetVideoList = params => {
+  return post('file/getVideoList', params, {stringify: true}).then(res => res.data)
+}
+
+export const GetAudioList = params => {
+  return post('file/getAudioList', params, {stringify: true}).then(res => res.data)
+}
+
+export const GetPicList = params => {
+  return post('file/getPicList', params, {stringify: true}).then(res => res.data)
+}
