@@ -351,7 +351,7 @@ export default {
     // 文件列表改变时，选择文件后开始计算文件md5值
     onFileChange (file, fileList) {
       if (file.status === 'ready') {
-        GetFileMD5(file.raw, file.uid, this.filters.parentId, this)
+        GetFileMD5(file.raw, file.uid, this.filters.parentId)
       }
     },
     // 文件手动上传

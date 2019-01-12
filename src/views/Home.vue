@@ -1,7 +1,7 @@
 <template>
 <el-row class="container">
   <el-col :span="24" class="header">
-    <el-col :span="10" class="logo" :class="collapsed?'logo-collapse-width':'logo-width'">
+    <el-col :span="10" class="logo hidden-xs-only" :class="collapsed?'logo-collapse-width':'logo-width'">
       {{collapsed?'':sysName}}
       <img src="../assets/logo.png"/>
     </el-col>
@@ -12,8 +12,8 @@
     </el-col>
     <el-col :span="4" class="userinfo">
       <el-dropdown trigger="hover">
-        <span class="el-dropdown-link userinfo-inner"><img :src="this.sysUserAvatar" /> {{sysUserName}}</span>
-        <el-dropdown-menu slot="dropdown">
+        <span class="el-dropdown-link userinfo-inner"><img :src="this.sysUserAvatar" /> <span class="hidden-xs-only">{{sysUserName}}</span></span>
+        <el-dropdown-menu slot="dropdown" class="hidden-xs-only">
           <el-dropdown-item @click.native="toUserInfo">我的信息</el-dropdown-item>
           <el-dropdown-item>设置</el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">退出登录</el-dropdown-item>
@@ -22,10 +22,10 @@
     </el-col>
   </el-col>
   <el-col :span="24" class="main">
-    <aside :class="collapsed?'menu-collapsed':'menu-expanded'">
+    <aside :class="collapsed?'menu-collapsed':'menu-expanded'" class="hidden-xs-only">
       <!--导航菜单-->
-      <el-menu :default-active="$route.path" class="el-menu-vertical-demo" @open="handleopen" @close="handleclose" @select="handleselect"
-         unique-opened router :collapse="collapsed">
+      <el-menu :default-active="$route.path" class="el-menu-vertical-demo"
+         unique-opened router :collapse="collapsed" :collapse-transition="false">
         <template v-for="(item,index) in $router.options.routes" v-if="!item.hidden">
           <el-submenu :index="index+''" v-if="!item.leaf" v-bind:key="index">
             <template slot="title">
@@ -57,6 +57,7 @@
 
 <script>
 import { Logout } from '../api/user'
+import 'element-ui/lib/theme-chalk/display.css'
 
 export default {
   data () {
@@ -68,17 +69,6 @@ export default {
     }
   },
   methods: {
-    onSubmit () {
-      console.log('submit!');
-    },
-    handleopen () {
-      // console.log('handleopen');
-    },
-    handleclose () {
-      // console.log('handleclose');
-    },
-    handleselect: function (a, b) {
-    },
     // 退出登录
     logout: function () {
       // var _this = this;

@@ -2,14 +2,16 @@ import SparkMD5 from 'spark-md5'
 import ElementUI from 'element-ui'
 // 耦合了，没办法呀
 import { CheckMd5 } from '@/api/file'
+import store from '../store'
 
 /**
  * 计算文件md5值
  * @param file
- * @param that
+ * @param uid
+ * @param parentId
  * @constructor
  */
-export default function GetFileMD5 (file, uid, parentId, that) {
+export default function GetFileMD5 (file, uid, parentId) {
   let md5Hex = null;
   let isExist = true
   let fileReader = new FileReader()
@@ -54,7 +56,7 @@ export default function GetFileMD5 (file, uid, parentId, that) {
             // 服务器不存在该MD5值
             isExist = false
           }
-          that.$store.commit('storeFile', {uid, md5Hex, fileSize, fileRealName, lastModifiedDate, parentId, isExist})
+          store.commit('storeFile', {uid, md5Hex, fileSize, fileRealName, lastModifiedDate, parentId, isExist})
         }).catch(res => {
         })
       }

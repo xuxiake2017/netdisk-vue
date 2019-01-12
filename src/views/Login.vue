@@ -43,6 +43,10 @@ export default {
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' }
           // { validator: validaePass2 }
+        ],
+        imgCode: [
+          { required: true, message: '请输入验证码', trigger: 'blur' }
+          // { validator: validaePass2 }
         ]
       },
       checked: true
@@ -73,7 +77,12 @@ export default {
             this.logining = false;
           })
         } else {
-          console.log('error submit!!');
+          this.$notify({
+            duration: 2000,
+            title: '警告',
+            message: '请将登录信息填写完整！',
+            type: 'warning'
+          })
           return false;
         }
       });

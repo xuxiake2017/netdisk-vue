@@ -41,10 +41,9 @@ ajaxMethod.forEach((method) => {
             message: response.status === 200 ? response.data.msg : `网络错误`,
             duration: 2000
           })
-          // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
+          // 如果从后台传来的code未41000（未授权、未登录），页面刷新
           if (response.data.code && response.data.code === 41000) {
             window.setTimeout(() => {
-              sessionStorage.removeItem('user');
               location.reload();
             }, 2000);
           }
@@ -65,10 +64,9 @@ ajaxMethod.forEach((method) => {
             message: response.status === 200 ? response.data.msg : `网络错误`,
             duration: 2000
           })
-          // 如果从后台传来的code未41000（未授权、未登录）sessionStorage移除user对象，页面刷新
+          // 如果从后台传来的code未41000（未授权、未登录），页面刷新
           if (response.data.code && response.data.code === 41000) {
             window.setTimeout(() => {
-              sessionStorage.removeItem('user');
               location.reload();
             }, 2000);
           }
