@@ -11,6 +11,9 @@ export default {
     delUser (state) {
       state.user = null
       removeToken()
+    },
+    clearMessages (state) {
+      state.user.messages = []
     }
   },
   actions: {},

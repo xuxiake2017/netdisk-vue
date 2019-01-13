@@ -12,10 +12,14 @@
     </el-col>
     <el-col :span="4" class="userinfo">
       <el-dropdown trigger="hover">
-        <span class="el-dropdown-link userinfo-inner"><img :src="this.sysUserAvatar" /> <span class="hidden-xs-only">{{sysUserName}}</span></span>
+        <span class="el-dropdown-link userinfo-inner">
+          <i class="fa fa-circle msg-tag" v-if="this.$store.getters.getUser.messages.length > 0"></i>
+          <img :src="this.sysUserAvatar" />
+          <span class="hidden-xs-only">{{sysUserName}}</span>
+        </span>
         <el-dropdown-menu slot="dropdown" class="hidden-xs-only">
-          <el-dropdown-item @click.native="toUserInfo">我的信息</el-dropdown-item>
-          <el-dropdown-item>设置</el-dropdown-item>
+          <el-dropdown-item @click.native="toMyMsg">我的消息<i v-if="this.$store.getters.getUser.messages.length > 0" class="fa fa-circle" style="color: #ff4d51; font-size: 3px;"></i></el-dropdown-item>
+          <el-dropdown-item @click.native="toUserInfo">个人信息</el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">退出登录</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -37,7 +41,6 @@
           <el-menu-item v-if="item.leaf&&item.children.length>0" :index="item.children[0].path" v-bind:key="index">
             <i :class="item.iconCls"></i>
             <span slot="title">{{item.children[0].name}}</span>
-            <!--<i :class="item.iconCls"></i>{{item.children[0].name}}-->
           </el-menu-item>
         </template>
       </el-menu>
@@ -71,9 +74,7 @@ export default {
   methods: {
     // 退出登录
     logout: function () {
-      // var _this = this;
       this.$confirm('确认退出吗?', '提示', {
-        // type: 'warning'
       }).then(() => {
         Logout().then(res => {
           this.$store.commit('delUser')
@@ -85,6 +86,9 @@ export default {
     toUserInfo () {
       this.$router.push('/userInfo')
     },
+    toMyMsg () {
+      this.$router.push('/myMessage')
+    },
     // 折叠导航栏
     collapse: function () {
       this.collapsed = !this.collapsed;
@@ -92,9 +96,18 @@ export default {
   },
   mounted () {
     const user = this.$store.getters.getUser
+    console.log(user)
     if (user) {
-      this.sysUserName = user.name || '';
-      this.sysUserAvatar = user.avatar || '';
+      this.sysUserName = user.name || '默认用户名';
+      this.sysUserAvatar = user.avatar || 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif';
+    }
+    if (user.messages.length > 0) {
+      this.$notify.info({
+        title: '提示',
+        message: `您有新的消息，请到"我的信息"中查看`,
+        duration: 2000,
+        position: 'bottom-right'
+      });
     }
   }
 }
@@ -128,10 +141,15 @@ export default {
           margin: 10px 0px 10px 10px;
           float: right;
         }
+        .msg-tag {
+          color: #ff4d51;
+          position: absolute;
+          right: 3px;
+          bottom: 3px;
+        }
       }
     }
     .logo {
-      //width:230px;
       height:60px;
       font-size: 22px;
       padding-left:10px;

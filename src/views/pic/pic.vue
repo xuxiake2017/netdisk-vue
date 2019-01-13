@@ -1,5 +1,8 @@
 <template>
   <div>
+    <div v-if="imgList.length === 0">
+      <el-alert title="您的相册空空如也，赶快上传点东西吧" :closable="false"></el-alert>
+    </div>
     <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10" class="img-list" :style="{height: computeHeight + 'px'}">
       <div v-for="(item, index) in imgList" :key="index">
       <el-alert

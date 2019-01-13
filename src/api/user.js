@@ -19,3 +19,31 @@ export const Detail = params => {
 export const Update = params => {
   return post('user/update', params, {stringify: false}).then(res => res.data)
 }
+
+export const CheckUserName = params => {
+  return post('user/checkUserName', params).then(res => res.data)
+}
+
+export const CheckPhone = params => {
+  return post('user/checkPhone', params).then(res => res.data)
+}
+
+export const CheckEmail = params => {
+  return post('user/checkEmail', params).then(res => res.data)
+}
+
+export const CheckImgCode = params => {
+  return post('user/checkImgCode', params).then(res => res.data)
+}
+
+export const SendCodeToPhone = params => {
+  return post('verify/sendCodeToPhone', params).then(res => res.data)
+}
+
+export const VerifyEmail = params => {
+  return post('verify/verifyEmail', params).then(res => res.data)
+}
+
+export const Register = params => {
+  return post('user/register', params).then(res => res.data)
+}

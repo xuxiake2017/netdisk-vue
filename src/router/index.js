@@ -1,6 +1,7 @@
-import Login from '../views/Login.vue'
+import Login from '../views/login/Login.vue'
 import NotFound from '../views/404.vue'
 import Home from '../views/Home.vue'
+import HomeNoLogin from '../views/HomeNoLogin'
 import allFile from '../views/file/allFile.vue'
 import Document from '../views/file/document.vue'
 import Music from '../views/file/music.vue'
@@ -9,6 +10,7 @@ import Pic from '../views/file/pic.vue'
 import Album from '../views/pic/pic.vue'
 import Statistical from '../views/charts/statistical.vue'
 import UserInfo from '../views/user/userInfo'
+import MyMessage from '../views/user/myMessage'
 import ShareList from '../views/share/shareList'
 import RecycleList from '../views/recycle/recycleList'
 import Vue from 'vue'
@@ -21,7 +23,7 @@ import { GetInfo } from '../api/user'
 
 let routes = [
   {
-    path: '/login',
+    path: '/user/:info',
     component: Login,
     name: '',
     hidden: true
@@ -32,7 +34,12 @@ let routes = [
     name: '',
     hidden: true
   },
-  // { path: '/main', component: Main },
+  {
+    path: '/home/verify',
+    component: HomeNoLogin,
+    name: '',
+    hidden: true
+  },
   {
     path: '/',
     component: Home,
@@ -89,11 +96,21 @@ let routes = [
   {
     path: '/',
     component: Home,
-    name: '我的信息',
+    name: '个人信息',
     iconCls: 'fa fa-user',
     leaf: true,
     children: [
-      { path: '/userInfo', component: UserInfo, name: '我的信息' }
+      { path: '/userInfo', component: UserInfo, name: '个人信息' }
+    ]
+  },
+  {
+    path: '/',
+    component: Home,
+    name: '我的消息',
+    iconCls: 'fa fa-comments',
+    leaf: true,
+    children: [
+      { path: '/myMessage', component: MyMessage, name: '我的消息' }
     ]
   },
   {
@@ -109,16 +126,15 @@ const router = new Router({
   routes
 });
 
+const whiteList = ['/user/login', '/user/register', '/home/verify'] // 不重定向白名单
+
 router.beforeEach((to, from, next) => {
   NProgress.start();
   const token = getToken()
   if (token) {
-    if (to.path === '/login') {
+    if (to.path === '/user/login' || to.path === '/') {
       next({ path: '/allFile' })
     } else {
-      if (to.path === '/') {
-        next({path: '/allFile'})
-      }
       const user = store.getters.getUser
       if (user) {
         next()
@@ -128,15 +144,15 @@ router.beforeEach((to, from, next) => {
           next()
         }).catch(res => {
           store.commit('delUser')
-          next({ path: '/login' })
+          next({ path: '/user/login' })
         })
       }
     }
   } else {
-    if (to.path === '/login') {
+    if (whiteList.indexOf(to.path) !== -1) {
       next()
     } else {
-      next({ path: '/login' })
+      next({ path: '/user/login' })
     }
   }
 })
