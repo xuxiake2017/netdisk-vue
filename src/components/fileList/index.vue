@@ -22,19 +22,42 @@
       </el-table-column>
       <el-table-column prop="fileSize" label="文件大小" width="100" :formatter="formatFileSize" sortable>
       </el-table-column>
-      <el-table-column prop="uploadTime" label="上传时间" width="200" :formatter="formatFileTime" sortable>
+      <el-table-column
+        v-if="type === 'allFile' || type === 'document' || type === 'music' || type === 'pic' || type === 'video'"
+        prop="uploadTime"
+        label="上传时间"
+        width="200"
+        :formatter="formatFileTime"
+        sortable>
       </el-table-column>
-      <el-table-column v-if="type !== 'allFile' || searching" prop="uploadTime" label="文件路径" width="200">
+      <el-table-column
+        v-if="type === 'recycle'"
+        prop="deleteTime"
+        label="删除时间"
+        width="200"
+        :formatter="formatFileTime"
+        sortable>
+      </el-table-column>
+      <el-table-column
+        v-if="type === 'recycle'"
+        prop="overTime"
+        label="过期时间"
+        width="200"
+        :formatter="formatFileTime"
+        sortable>
+      </el-table-column>
+      <el-table-column v-if="(type !== 'allFile' || searching) && !(type === 'recycle' || type === 'share')" prop="uploadTime" label="文件路径" width="200">
         <template scope="scope">
           <el-tag type="info">{{scope.row.pathname}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="400">
+      <el-table-column label="操作">
         <template scope="scope">
           <el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">删除</el-button>
-          <el-button type="info" size="small" @click="handleReName(scope.$index, scope.row)">重命名</el-button>
+          <el-button v-if="type === 'recycle'" type="info" size="small" @click="handleRestore(scope.$index, scope.row)">还原</el-button>
+          <el-button v-if="!(type === 'recycle' || type === 'share')" type="info" size="small" @click="handleReName(scope.$index, scope.row)">重命名</el-button>
           <el-button v-if="type === 'allFile'" type="primary" size="small" @click="handleMove(scope.$index, scope.row)">移动</el-button>
-          <el-button v-if="scope.row.fileType!=0" type="success" size="small" @click="handleDownload(scope.$index, scope.row)">下载</el-button>
+          <el-button v-if="scope.row.fileType != 0 && !(type === 'recycle' || type === 'share')" type="success" size="small" @click="handleDownload(scope.$index, scope.row)">下载</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -71,7 +94,7 @@
 
 <script>
 import util from '../../common/util'
-import { ReName } from '../../api/file'
+import { ReName, DeleteFile } from '../../api/file'
 import $ from 'jquery'
 
 export default {
@@ -154,14 +177,37 @@ export default {
       return util.formatFileSize(row.fileSize)
     },
     // 格式化文件时间
-    formatFileTime (row) {
-      return util.formatDate.format(new Date(row.uploadTime), 'yyyy-MM-dd hh:mm:ss')
+    formatFileTime (row, column) {
+      switch (column.property) {
+        case 'uploadTime':
+          return util.formatDate.format(new Date(row.uploadTime), 'yyyy-MM-dd hh:mm:ss')
+        case 'deleteTime':
+          return util.formatDate.format(new Date(row.deleteTime), 'yyyy-MM-dd hh:mm:ss')
+        case 'overTime':
+          return util.formatDate.format(new Date(row.overTime), 'yyyy-MM-dd hh:mm:ss')
+      }
     },
     selsChange: function (sels) {
       this.sels = sels;
     },
     // 文件删除
-    handleDel (index, row) {},
+    handleDel (index, row) {
+      this.$confirm('确认删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        DeleteFile({ fileSaveName: row.fileSaveName }).then(res => {
+          this.$message({
+            type: 'success',
+            message: '删除成功!'
+          })
+          this.reacquireData()
+        })
+      })
+    },
+    handleRestore (index, row) {
+    },
     // 文件移动
     handleMove (index, row) {
       this.$emit('file-move', index, row)

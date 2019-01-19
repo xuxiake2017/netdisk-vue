@@ -43,3 +43,7 @@ export const GetAudioList = params => {
 export const GetPicList = params => {
   return post('file/getPicList', params, {stringify: true}).then(res => res.data)
 }
+
+export const DeleteFile = params => {
+  return post('file/deleteFile', params).then(res => res.data)
+}

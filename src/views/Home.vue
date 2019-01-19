@@ -60,7 +60,6 @@
 
 <script>
 import { Logout } from '../api/user'
-import 'element-ui/lib/theme-chalk/display.css'
 
 export default {
   data () {
