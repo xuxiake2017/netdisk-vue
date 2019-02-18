@@ -28,6 +28,7 @@
       @handle-current-change="handleCurrentChange"
       @reacquire-data="getFileList"
       @get-sublist="getSublist"
+      @share-file="shareFile"
       @file-move="handleMove"
     >
     </file-list>
@@ -104,13 +105,28 @@
       <el-button type="primary" @click="moveFile">确 定</el-button>
     </span>
     </el-dialog>
+
+    <!--分享成功对话框-->
+    <el-dialog
+      title="提示"
+      :visible.sync="shareDialogVisible"
+      :before-close="shareDialogClose"
+      width="20%">
+      <span>{{message}}</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="shareDialogVisible = false">取 消</el-button>
+        <el-button type="primary" id="clipBoardBtn" :data-clipboard-text="clipboardText" @click="cipboard">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import FileList from '../../components/fileList'
-import { GetFileList, UploadMD5, ListAllDir, MkDir, MoveFile } from '../../api/file'
+import { GetFileList, UploadMD5, ListAllDir, MkDir, MoveFile, GetPathStore } from '../../api/file'
+import { ShareFile } from '../../api/share'
 import GetFileMD5 from '../../common/getFileMD5'
+import ClipBoard from 'clipboard'
 
 export default {
   name: 'allFile',
@@ -152,19 +168,29 @@ export default {
       // 新建文件夹
       dirDialogVisible: false,
       newDir: '',
-      searching: false
+      searching: false,
+      // 文件分享
+      shareDialogVisible: false,
+      message: '',
+      clipboardText: ''
     }
   },
   methods: {
     // 搜索
     handleSearch () {
       if (this.filters.fileRealName) {
+        this.pathStore = [
+          {parentId: -1, fileRealName: `搜索文件"${this.filters.fileRealName}"`}
+        ]
         this.searching = true
         this.getFileList()
       }
     },
     // 搜索重置
     handleReset () {
+      this.pathStore = [
+        {parentId: -1, fileRealName: '全部文件'}
+      ]
       this.searching = false
       this.filters.fileRealName = '';
       this.filters.parentId = -1
@@ -193,9 +219,15 @@ export default {
     // 查询文件下的列表
     getSublist (row, column, cell, event) {
       if (row.fileType === 0 && column.property === 'fileRealName') {
-        this.searching = false
-        this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
-        this.filters.fileRealName = ''
+        if (this.searching) {
+          this.searching = false
+          this.filters.fileRealName = ''
+          GetPathStore({ fileId: row.id }).then(res => {
+            this.pathStore = res.data
+          })
+        } else {
+          this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
+        }
         this.filters.parentId = row.id
         this.getFileList()
       }
@@ -418,6 +450,35 @@ export default {
         this.moveDialogVisible = false
         this.getFileList()
       })
+    },
+    // 文件分享
+    shareFile (index, row) {
+      ShareFile({ fileSaveName: row.fileSaveName }).then(res => {
+        this.shareDialogVisible = true
+        this.clipboardText = `链接：${res.data.serverHost}/#/home/s/${res.data.shareFile.shareId} 密码：${res.data.shareFile.sharePwd}`
+        this.message = `文件分享成功，点击"确定"复制链接及密码（${this.clipboardText}）`
+      })
+    },
+    // 复制到剪贴板
+    cipboard () {
+      let clipboard_ = new ClipBoard('#clipBoardBtn')
+      clipboard_.on('success', () => {
+        this.$message({
+          message: '复制成功！',
+          type: 'success'
+        })
+        this.shareDialogVisible = false
+      })
+      clipboard_.on('error', () => {
+        this.$message({
+          message: '复制失败，请手动选择复制！',
+          type: 'error'
+        })
+      })
+    },
+    // 关闭提示分享成功对话框
+    shareDialogClose (done) {
+      done()
     }
   },
   mounted () {

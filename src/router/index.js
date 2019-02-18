@@ -41,6 +41,12 @@ let routes = [
     hidden: true
   },
   {
+    path: '/home/s/:shareId',
+    component: HomeNoLogin,
+    name: '',
+    hidden: true
+  },
+  {
     path: '/',
     component: Home,
     name: '文件列表',
@@ -126,7 +132,7 @@ const router = new Router({
   routes
 });
 
-const whiteList = ['/user/login', '/user/register', '/home/verify'] // 不重定向白名单
+const whiteList = ['/user/login', '/user/register', '/home/verify', '/home/s'] // 不重定向白名单
 
 router.beforeEach((to, from, next) => {
   NProgress.start();
@@ -149,7 +155,19 @@ router.beforeEach((to, from, next) => {
       }
     }
   } else {
-    if (whiteList.indexOf(to.path) !== -1) {
+    // if (whiteList.indexOf(to.path) !== -1) {
+    //   console.log(to.path)
+    //   next()
+    // } else {
+    //   next({ path: '/user/login' })
+    // }
+    let flag = false
+    whiteList.forEach((item, index) => {
+      if (to.path.indexOf(item) !== -1) {
+        flag = true
+      }
+    })
+    if (flag) {
       next()
     } else {
       next({ path: '/user/login' })

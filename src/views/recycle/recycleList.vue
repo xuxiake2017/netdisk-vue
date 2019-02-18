@@ -19,6 +19,7 @@
       :searching="searching"
       @handle-current-change="handleCurrentChange"
       @reacquire-data="getRecycleList"
+      @file-restore="fileRestore"
       type="recycle"
     >
     </file-list>
@@ -27,7 +28,7 @@
 
 <script>
 import FileList from '../../components/fileList'
-import { GetRecycleList } from '../../api/recycle'
+import { GetRecycleList, Reback } from '../../api/recycle'
 
 export default {
   name: 'document',
@@ -79,6 +80,16 @@ export default {
       }).catch(reason => {
         this.listLoading = false;
       });
+    },
+    // 文件还原
+    fileRestore (index, row) {
+      Reback({ recycleId: row.recycleId, fileSaveName: row.fileSaveName }).then(res => {
+        this.$message({
+          message: '文件还原成功！',
+          type: 'success'
+        });
+        this.getRecycleList()
+      })
     },
     // 分页页码改变
     handleCurrentChange (pageNum) {

@@ -157,7 +157,7 @@ export default {
     }
     return {
       logining: false,
-      captchaSrc: process.env.BASE_API + '/createImg',
+      captchaSrc: process.env.BASE_API + '/user/createImg',
       form: {
         loginInfo: '',
         password: '',
@@ -197,7 +197,7 @@ export default {
   },
   methods: {
     changeImgCode () {
-      this.captchaSrc = `${process.env.BASE_API}/createImg?${new Date().getTime()}`;
+      this.captchaSrc = `${process.env.BASE_API}/user/createImg?${new Date().getTime()}`;
     },
     handleReset () {
       this.$refs.form.resetFields();

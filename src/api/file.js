@@ -47,3 +47,7 @@ export const GetPicList = params => {
 export const DeleteFile = params => {
   return post('file/deleteFile', params).then(res => res.data)
 }
+
+export const GetPathStore = params => {
+  return post('file/getPathStore', params).then(res => res.data)
+}

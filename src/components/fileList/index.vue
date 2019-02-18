@@ -18,7 +18,7 @@
           <img :src="fileIcoFilter(scope.row)" height="26" width="26" style="margin-top: 5px;"/>
         </template>
       </el-table-column>
-      <el-table-column prop="fileRealName" label="文件名" width="250" sortable>
+      <el-table-column prop="fileRealName" label="文件名" width="220" sortable>
       </el-table-column>
       <el-table-column prop="fileSize" label="文件大小" width="100" :formatter="formatFileSize" sortable>
       </el-table-column>
@@ -46,7 +46,36 @@
         :formatter="formatFileTime"
         sortable>
       </el-table-column>
-      <el-table-column v-if="(type !== 'allFile' || searching) && !(type === 'recycle' || type === 'share')" prop="uploadTime" label="文件路径" width="200">
+      <el-table-column
+        v-if="type === 'share'"
+        prop="shareTime"
+        label="分享时间"
+        width="200"
+        :formatter="formatFileTime"
+        sortable>
+      </el-table-column>
+      <el-table-column
+        v-if="type === 'share'"
+        prop="accessTimes"
+        label="访问次数"
+        width="100"
+        sortable>
+      </el-table-column>
+      <el-table-column
+        v-if="type === 'share'"
+        prop="downloadTimes"
+        label="下载次数"
+        width="100"
+        sortable>
+      </el-table-column>
+      <el-table-column
+        v-if="type === 'share'"
+        prop="saveTimes"
+        label="保存次数"
+        width="100"
+        sortable>
+      </el-table-column>
+      <el-table-column v-if="(type !== 'allFile' || searching) && !(type === 'recycle' || type === 'share')" prop="uploadTime" label="文件路径" width="150">
         <template scope="scope">
           <el-tag type="info">{{scope.row.pathname}}</el-tag>
         </template>
@@ -55,7 +84,9 @@
         <template scope="scope">
           <el-button type="danger" size="small" @click="handleDel(scope.$index, scope.row)">删除</el-button>
           <el-button v-if="type === 'recycle'" type="info" size="small" @click="handleRestore(scope.$index, scope.row)">还原</el-button>
+          <el-button id="clipBoardBtn" v-if="type === 'share'" type="info" size="small" @click="copyLink(scope.$index, scope.row)">复制链接</el-button>
           <el-button v-if="!(type === 'recycle' || type === 'share')" type="info" size="small" @click="handleReName(scope.$index, scope.row)">重命名</el-button>
+          <el-button v-if="type === 'allFile'" type="warning" size="small" @click="shareFile(scope.$index, scope.row)">分享</el-button>
           <el-button v-if="type === 'allFile'" type="primary" size="small" @click="handleMove(scope.$index, scope.row)">移动</el-button>
           <el-button v-if="scope.row.fileType != 0 && !(type === 'recycle' || type === 'share')" type="success" size="small" @click="handleDownload(scope.$index, scope.row)">下载</el-button>
         </template>
@@ -95,6 +126,8 @@
 <script>
 import util from '../../common/util'
 import { ReName, DeleteFile } from '../../api/file'
+import { DeleteRecycle } from '../../api/recycle'
+import { DeleteShare } from '../../api/share'
 import $ from 'jquery'
 
 export default {
@@ -111,8 +144,7 @@ export default {
   },
   props: {
     filters: {
-      type: Object,
-      required: true
+      type: Object
     },
     tableData: {
       type: Object,
@@ -132,18 +164,6 @@ export default {
   },
   methods: {
     // 显示文件图标
-    // 文件夹 0
-    // 文档 1 txt
-    // doc docx 11
-    // xls 12
-    // ppt 13
-    // pdf 14
-    // 图片 2 png jpg jpeg gif
-    // 音乐 3 mp3 ape flac
-    // 视频 4 mp4 mkv avi rmvb flv
-    // 压缩包 5 zip rar 7z
-    // 安卓安装包 6 apk
-    // 默认：其他 9
     fileIcoFilter (row) {
       switch (row.fileType) {
         case 0 :
@@ -185,28 +205,71 @@ export default {
           return util.formatDate.format(new Date(row.deleteTime), 'yyyy-MM-dd hh:mm:ss')
         case 'overTime':
           return util.formatDate.format(new Date(row.overTime), 'yyyy-MM-dd hh:mm:ss')
+        case 'shareTime':
+          return util.formatDate.format(new Date(row.shareTime), 'yyyy-MM-dd hh:mm:ss')
       }
     },
     selsChange: function (sels) {
       this.sels = sels;
     },
-    // 文件删除
+    // 删除
     handleDel (index, row) {
-      this.$confirm('确认删除该文件, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        DeleteFile({ fileSaveName: row.fileSaveName }).then(res => {
-          this.$message({
-            type: 'success',
-            message: '删除成功!'
+      if (this.type === 'allFile' ||
+        this.type === 'document' ||
+        this.type === 'music' ||
+        this.type === 'pic' ||
+        this.type === 'video') {
+        this.$confirm('确认删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          DeleteFile({ fileSaveName: row.fileSaveName }).then(res => {
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            })
+            this.reacquireData()
           })
-          this.reacquireData()
         })
-      })
+      } else if (this.type === 'share') {
+        console.log(row)
+        this.$confirm('确认删除该分享, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          DeleteShare(row.id).then(res => {
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            })
+            this.reacquireData()
+          })
+        })
+      } else if (this.type === 'recycle') {
+        this.$confirm('确认彻底删除该文件, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          DeleteRecycle(row.recycleId).then(res => {
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            })
+            this.reacquireData()
+          })
+        })
+      }
     },
+    // 回收站文件还原
     handleRestore (index, row) {
+      this.$emit('file-restore', index, row)
+    },
+    // 重新复制分享链接
+    copyLink (index, row) {
+      this.$emit('copy-link', index, row)
     },
     // 文件移动
     handleMove (index, row) {
@@ -293,9 +356,11 @@ export default {
     },
     // 查询文件下的列表
     getSublist (row, column, cell, event) {
-      if (this.type === 'allFile') {
-        this.$emit('get-sublist', row, column, cell, event)
-      }
+      this.$emit('get-sublist', row, column, cell, event)
+    },
+    // 文件分享
+    shareFile (index, row) {
+      this.$emit('share-file', index, row)
     }
   },
   computed: {
