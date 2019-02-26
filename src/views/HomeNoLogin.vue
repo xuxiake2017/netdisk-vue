@@ -5,9 +5,9 @@
       <span>{{sysName}}</span>
       <img src="../assets/logo.png"/>
     </el-col>
-    <el-col v-if="$store.getters.getUser" :span="2" class="user-info">
+    <el-col v-if="$store.getters.getUser" :xs="6" :md="4" :lg="3" class="user-info">
       <el-button type="text" class="button" @click="toHome">首页</el-button>
-      <img :src="this.sysUserAvatar" class="hidden-md-and-down" />
+      <img :src="this.sysUserAvatar" />
     </el-col>
     <el-col :span="2" class="tool" v-else>
       <el-button type="text" class="button" @click="toLogin">登录</el-button>
@@ -15,15 +15,82 @@
     </el-col>
   </el-col>
   <el-col>
-    <el-card v-if="shareId" style="width: 80%">
+    <el-card v-if="shareFile.shareId" style="width: 80%">
       <div slot="header">
-        <img :src="shareFileIoc" height="26" width="26" style="margin-top: 5px; display:inline-block; vertical-align:middle;"/>
-        <span style="display:inline-block; vertical-align:middle;">{{shareFile.rows[0].fileRealName}}</span>
+        <el-row>
+          <el-col :span="8">
+            <img :src="shareFileIoc" height="26" width="26" style="display:inline-block; vertical-align:middle;"/>
+            <span>{{shareFile.fileRealName}}</span>
+          </el-col>
+          <el-col :span="5" style="position: absolute; right: 10px">
+            <el-button v-if="shareFile.fileType != 0" size="small" @click="handleDownload">下载</el-button>
+            <el-button type="info" size="small" @click="handleSaveToCloud(null, null)">保存到网盘</el-button>
+          </el-col>
+        </el-row>
+        <el-row style="margin-top: 20px;">
+          <el-col :span="4">
+            <i class="fa fa-clock-o"></i>
+            <span>{{formatTime(shareFile.shareTime)}}</span>
+          </el-col>
+        </el-row>
       </div>
-      <div>
-        <file-list
-          :table-data="shareFile"
-        ></file-list>
+      <div v-if="shareFile.isDir === 0 && showElCardBody">
+        <el-breadcrumb separator="/" style="padding: 10px;">
+          <el-breadcrumb-item v-for="(item, index) in pathStore" :key="item.parentId" @click.native="jump(item, index)" style="cursor: pointer; font-weight: bold">{{item.fileRealName}}</el-breadcrumb-item>
+        </el-breadcrumb>
+        <el-table :data="tableData"
+                  @cell-click="getSublistClick"
+                  :cell-style="showPointer"
+                  highlight-current-row v-loading="listLoading">
+          <el-table-column type="selection" width="55">
+          </el-table-column>
+          <el-table-column type="index" width="60">
+          </el-table-column>
+          <el-table-column width="50">
+            <template slot-scope="scope">
+              <img :src="fileIcoFilter(scope.row.fileType)" height="26" width="26" style="margin-top: 5px;"/>
+            </template>
+          </el-table-column>
+          <el-table-column prop="fileRealName" label="文件名" width="220" sortable>
+          </el-table-column>
+          <el-table-column prop="fileSize" label="文件大小" width="100" :formatter="formatFileSize" sortable>
+          </el-table-column>
+          <el-table-column
+            prop="uploadTime"
+            label="上传时间"
+            width="200"
+            :formatter="formatFileTime"
+            sortable>
+          </el-table-column>
+          <el-table-column label="操作">
+            <template scope="scope">
+              <el-button v-if="scope.row.fileType != 0" type="success" size="small" @click="handleDownload(scope.$index, scope.row)">下载</el-button>
+              <el-button type="info" size="small" @click="handleSaveToCloud(scope.$index, scope.row)">保存到网盘</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div v-if="shareFile.fileType === 4 && showElCardBody">
+        <video-player class="vjs-custom-skin"
+                      ref="videoPlayer"
+                      :options="playerOptions"
+                      :playsinline="true"
+                      @play="onPlayerPlay($event)"
+                      @pause="onPlayerPause($event)"
+                      @ended="onPlayerEnded($event)"
+                      @loadeddata="onPlayerLoadeddata($event)"
+                      @waiting="onPlayerWaiting($event)"
+                      @playing="onPlayerPlaying($event)"
+                      @timeupdate="onPlayerTimeupdate($event)"
+                      @canplay="onPlayerCanplay($event)"
+                      @canplaythrough="onPlayerCanplaythrough($event)"
+                      @ready="playerReadied"
+                      @statechanged="playerStateChanged($event)"
+                      style="width: 100%">
+        </video-player>
+      </div>
+      <div v-if="shareFile.fileType === 3 && showElCardBody">
+        <aplayer :music="musicOptions"/>
       </div>
     </el-card>
     <el-card v-else>
@@ -35,36 +102,180 @@
       </div>
     </el-card>
   </el-col>
+
+  <el-dialog
+    :show-close="false"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    :title="`'${shareFile.shareUser}'给您加密分享了文件`"
+    :visible.sync="pwdDialogVisible"
+    width="30%" @keyup.enter.native="verifyPwd">
+    <el-input v-model="shareFile.sharePwd" placeholder="请输入提取密码"></el-input>
+    <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="verifyPwd">提取文件</el-button>
+      </span>
+  </el-dialog>
 </el-row>
 </template>
 
 <script>
 import 'element-ui/lib/theme-chalk/display.css'
 import { VerifyEmail } from '../api/user'
-import { GetShareFile } from '../api/share'
-import FileList from '@/components/fileList'
+import { GetShareFile, CheckPwd, GetSubList, SaveToCloud } from '../api/share'
+import util from '../common/util'
+import Cookies from 'js-cookie'
+// require styles
+import 'video.js/dist/video-js.css'
+import 'vue-video-player/src/custom-theme.css'
+import { videoPlayer } from 'vue-video-player'
+import Aplayer from 'vue-aplayer'
 
 export default {
-  components: {FileList},
+  components: {
+    videoPlayer,
+    Aplayer
+  },
   data () {
     return {
       sysName: 'NETDISK-VUE',
       sysUserAvatar: '',
       sysUserName: '',
       prompt: '验证中...',
-      shareId: '',
-      shareFileIoc: '',
+      shareFileIoc: null,
       shareFile: {
-        rows: [],
-        pagination: {
-          total: 0,
-          pageNum: 1,
-          pageSize: 20
-        }
-      }
+        fileId: 0,
+        fileRealName: '',
+        fileSaveName: '',
+        fileSize: null,
+        fileType: 0,
+        isDir: 0,
+        shareId: '',
+        sharePwd: '',
+        shareTime: null,
+        shareUser: ''
+      },
+      pwdDialogVisible: false,
+      tableData: null,
+      listLoading: false,
+      pathStore: [
+        {parentId: null, fileRealName: '全部文件'}
+      ],
+      // videojs options
+      playerOptions: {
+        height: '360',
+        autoplay: false,
+        muted: true,
+        language: 'en',
+        playbackRates: [0.7, 1.0, 1.5, 2.0],
+        sources: [{
+          type: 'video/mp4',
+          // mp4
+          src: ''
+          // webm
+          // src: "https://cdn.theguardian.tv/webM/2015/07/20/150716YesMen_synd_768k_vp8.webm"
+        }],
+        poster: ''
+      },
+      musicOptions: {
+        title: '',
+        artist: '没有演唱者信息',
+        src: '',
+        pic: ''
+      },
+      showElCardBody: false
     }
   },
   methods: {
+    verifyPwd () {
+      if (!this.shareFile.sharePwd) {
+        this.$message({
+          message: '请输入提取密码再提交',
+          type: 'warning'
+        })
+      } else {
+        CheckPwd({shareId: this.shareFile.shareId, sharePwd: this.shareFile.sharePwd}).then(res => {
+          this.pwdDialogVisible = false
+          Cookies.set('shareId', this.shareFile.shareId)
+          Cookies.set('sharePwd', this.shareFile.sharePwd)
+          this.getSublist()
+        })
+      }
+    },
+    formatTime (time) {
+      return util.formatDate.format(new Date(time), 'yyyy-MM-dd hh:mm:ss')
+    },
+    // 下载
+    handleDownload (index, row) {
+      if (row) {
+        window.open(`${process.env.BASE_API}/share/download?shareId=${this.shareFile.shareId}&sharePwd=${this.shareFile.sharePwd}&fileId=${row.id}`, '_blank')
+      } else {
+        window.open(`${process.env.BASE_API}/share/download?shareId=${this.shareFile.shareId}&sharePwd=${this.shareFile.sharePwd}`, '_blank')
+      }
+    },
+    // 保存到网盘
+    handleSaveToCloud (index, row) {
+      let param = {}
+      if (index && row) {
+        param = {shareId: this.shareFile.shareId, sharePwd: this.shareFile.sharePwd, fileId: row.id}
+      } else {
+        param = {shareId: this.shareFile.shareId, sharePwd: this.shareFile.sharePwd}
+      }
+      SaveToCloud({ ...param }).then(res => {
+        this.$message({
+          message: res.msg,
+          type: 'success'
+        })
+      }).catch(res => {
+        if (res.data.code === 20141) {
+          window.setTimeout(() => {
+            this.$router.push({ path: '/user/login' })
+          }, 1000)
+        }
+      })
+    },
+    // 格式化文件大小
+    formatFileSize (row, column) {
+      return util.formatFileSize(row.fileSize)
+    },
+    // 格式化文件时间
+    formatFileTime (row, column) {
+      return util.formatDate.format(new Date(row.uploadTime), 'yyyy-MM-dd hh:mm:ss')
+    },
+    // 查询子目录
+    getSublist (parentId) {
+      GetSubList({shareId: this.shareFile.shareId, sharePwd: this.shareFile.sharePwd, parentId}).then(res => {
+        this.tableData = res.data.files
+        if (this.shareFile.fileType === 4) {
+          this.playerOptions.sources.push({
+            type: 'video/mp4',
+            src: res.data.files[0].mediaCachePath})
+        } else if (this.shareFile.fileType === 3) {
+          this.musicOptions.title = res.data.files[0].fileRealName
+          this.musicOptions.src = res.data.files[0].mediaCachePath
+        }
+        this.showElCardBody = true
+      })
+    },
+    getSublistClick (row, column, cell, event) {
+      if (row.fileType === 0 && column.property === 'fileRealName') {
+        this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
+        this.getSublist(row.id)
+      }
+    },
+    // 使鼠标变成手型
+    showPointer ({row, column, rowIndex, columnIndex}) {
+      if (row.fileType === 0 && columnIndex === 3) {
+        return 'cursor: pointer'
+      }
+      return ''
+    },
+    jump (item, index) {
+      if ((this.pathStore.length === 1) || (this.pathStore.length > 1 && index + 1 === this.pathStore.length)) {
+        return
+      }
+      this.pathStore.splice(index + 1, this.pathStore.length - 1)
+      this.getSublist(item.parentId)
+    },
     toRegister () {
       this.$router.push({ path: '/user/register' })
     },
@@ -94,14 +305,29 @@ export default {
       }
     },
     getShareFile () {
-      GetShareFile({ shareId: this.shareId }).then(res => {
-        this.shareFile.rows.push(res.data)
-        this.shareFileIoc = this.fileIcoFilter()
-        console.log(this.shareFile)
+      GetShareFile({ shareId: this.shareFile.shareId }).then(res => {
+        this.shareFile = res.data
+        this.shareFileIoc = this.fileIcoFilter(this.shareFile.fileType)
+        let shareId = Cookies.get('shareId')
+        let sharePwd = Cookies.get('sharePwd')
+        if (shareId === this.shareFile.shareId) {
+          if (sharePwd) {
+            this.shareFile.sharePwd = sharePwd
+            this.getSublist()
+          } else {
+            this.pwdDialogVisible = true
+          }
+        } else {
+          Cookies.remove('shareId')
+          Cookies.remove('sharePwd')
+          this.pwdDialogVisible = true
+        }
+      }).catch(res => {
+        this.$router.push({ path: '/404' })
       })
     },
-    fileIcoFilter () {
-      switch (this.shareFile.rows[0].fileType) {
+    fileIcoFilter (fileType) {
+      switch (fileType) {
         case 0 :
           return require('@/assets/file_ico/Folder_24_e0cacad.png')
         case 1 :
@@ -127,19 +353,63 @@ export default {
         case 9 :
           return require('@/assets/file_ico/Misc_24_156416f.png')
       }
+    },
+    // listen event
+    onPlayerPlay (player) {
+      // console.log('player play!', player)
+    },
+    onPlayerPause (player) {
+      // console.log('player pause!', player)
+    },
+    onPlayerEnded (player) {
+      // console.log('player ended!', player)
+    },
+    onPlayerLoadeddata (player) {
+      // console.log('player Loadeddata!', player)
+    },
+    onPlayerWaiting (player) {
+      // console.log('player Waiting!', player)
+    },
+    onPlayerPlaying (player) {
+      // console.log('player Playing!', player)
+    },
+    onPlayerTimeupdate (player) {
+      // console.log('player Timeupdate!', player.currentTime())
+    },
+    onPlayerCanplay (player) {
+      // console.log('player Canplay!', player)
+    },
+    onPlayerCanplaythrough (player) {
+      // console.log('player Canplaythrough!', player)
+    },
+    // or listen state event
+    playerStateChanged (playerCurrentState) {
+      // console.log('player current update state', playerCurrentState)
+    },
+    // player is ready
+    playerReadied (player) {
+      // seek to 10s
+      console.log('example player 1 readied', player)
+      player.currentTime(10)
+      // console.log('example 01: the player is readied', player)
     }
   },
   mounted () {
-    this.shareId = this.$route.params.shareId
-    if (this.shareId) {
+    const user = this.$store.getters.getUser
+    if (user) {
+      this.sysUserName = user.name || '';
+      this.sysUserAvatar = user.avatar || '';
+    }
+    this.shareFile.shareId = this.$route.params.shareId
+    if (this.shareFile.shareId) {
       this.getShareFile()
     } else {
-      const user = this.$store.getters.getUser
-      if (user) {
-        this.sysUserName = user.name || '';
-        this.sysUserAvatar = user.avatar || '';
-      }
       this.verifyEmail()
+    }
+  },
+  computed: {
+    player () {
+      return this.$refs.videoPlayer.player
     }
   }
 }

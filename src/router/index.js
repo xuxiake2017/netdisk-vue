@@ -132,7 +132,7 @@ const router = new Router({
   routes
 });
 
-const whiteList = ['/user/login', '/user/register', '/home/verify', '/home/s'] // 不重定向白名单
+const whiteList = ['/user/login', '/user/register', '/home/verify', '/home/s', '/404'] // 不重定向白名单
 
 router.beforeEach((to, from, next) => {
   NProgress.start();

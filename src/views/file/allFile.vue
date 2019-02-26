@@ -83,11 +83,11 @@
       :before-close="moveDialogClose">
       <div class="block">
         <el-tree
+          v-if="hackReset"
           highlight-current
           :default-expanded-keys="[-1]"
           check-on-click-node
           ref="tree"
-          @node-expand="nodeExpand"
           :lazy="true"
           :load="loadChildTree"
           accordion
@@ -161,6 +161,8 @@ export default {
       uploadLimit: 10,
       uploadAction: `${process.env.BASE_API}/file/fileUpload`,
       // 文件移动
+      // 用于树组件的销毁
+      hackReset: false,
       moveDialogVisible: false,
       dirs: [],
       movedFileSaveName: '',
@@ -262,7 +264,7 @@ export default {
     },
     // 树的加载函数
     loadChildTree (node, resolve) {
-      if (node.id === 0) {
+      if (!node.key) {
         let nodes = []
         let node_ = {}
         node_['id'] = -1
@@ -292,29 +294,15 @@ export default {
         }
       }
     },
-    // 树被展开时调用（因为树不会每次去重新加载数据）
-    nodeExpand (dir, node, tree) {
-      if (this.movedId !== node.key) {
-        window.setTimeout(() => {
-          const theChildren = node.childNodes
-          theChildren.splice(0, theChildren.length)
-          ListAllDir({parentId: node.key}).then(res => {
-            res.data.forEach((value, index) => {
-              let node_ = {}
-              node_['id'] = value.id
-              node_['label'] = value.fileRealName
-              node_['disabled'] = false
-              this.$refs.tree.append(node_, node)
-            })
-          })
-        }, 200)
-      }
-    },
     // 打开文件移动对话框
     handleMove (index, row) {
       this.movedFileSaveName = row.fileSaveName
       this.movedId = row.id
       this.moveDialogVisible = true
+      this.hackReset = false;// 销毁组件
+      this.$nextTick(() => {
+        this.hackReset = true;// 重建组件
+      });
     },
     // 打开上传文件对话框
     openUploadDialog () {

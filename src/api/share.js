@@ -15,3 +15,15 @@ export const DeleteShare = params => {
 export const GetShareFile = params => {
   return post('share/getShareFile', params).then(res => res.data)
 }
+
+export const CheckPwd = params => {
+  return post('share/checkPwd', params).then(res => res.data)
+}
+
+export const GetSubList = params => {
+  return post('share/getSubList', params).then(res => res.data)
+}
+
+export const SaveToCloud = params => {
+  return post('share/saveToCloud', params).then(res => res.data)
+}
