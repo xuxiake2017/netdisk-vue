@@ -19,7 +19,7 @@
       <div slot="header">
         <el-row>
           <el-col :span="8">
-            <img :src="shareFileIoc" height="26" width="26" style="display:inline-block; vertical-align:middle;"/>
+            <img :src="fileIoc" height="26" width="26" style="display:inline-block; vertical-align:middle;"/>
             <span>{{shareFile.fileRealName}}</span>
           </el-col>
           <el-col :span="5" style="position: absolute; right: 10px">
@@ -75,22 +75,38 @@
                       ref="videoPlayer"
                       :options="playerOptions"
                       :playsinline="true"
-                      @play="onPlayerPlay($event)"
-                      @pause="onPlayerPause($event)"
-                      @ended="onPlayerEnded($event)"
-                      @loadeddata="onPlayerLoadeddata($event)"
-                      @waiting="onPlayerWaiting($event)"
-                      @playing="onPlayerPlaying($event)"
-                      @timeupdate="onPlayerTimeupdate($event)"
-                      @canplay="onPlayerCanplay($event)"
-                      @canplaythrough="onPlayerCanplaythrough($event)"
-                      @ready="playerReadied"
-                      @statechanged="playerStateChanged($event)"
                       style="width: 100%">
         </video-player>
       </div>
       <div v-if="shareFile.fileType === 3 && showElCardBody">
         <aplayer :music="musicOptions"/>
+      </div>
+    </el-card>
+    <el-card v-if="mediaFile" style="width: 80%">
+      <div slot="header">
+        <el-row>
+          <el-col :span="8">
+            <img :src="fileIoc" height="26" width="26" style="display:inline-block; vertical-align:middle;"/>
+            <span>{{mediaFile.fileRealName}}</span>
+          </el-col>
+        </el-row>
+        <el-row style="margin-top: 20px;">
+          <el-col :span="4">
+            <i class="fa fa-clock-o"></i>
+            <span>{{formatTime(mediaFile.uploadTime)}}</span>
+          </el-col>
+        </el-row>
+      </div>
+      <div v-if="mediaFile.fileType === $NetdiskConstant.FILE_TYPE_OF_MUSIC && showElCardBody">
+        <aplayer :music="musicOptions"/>
+      </div>
+      <div v-if="mediaFile.fileType === $NetdiskConstant.FILE_TYPE_OF_VIDEO && showElCardBody">
+        <video-player class="vjs-custom-skin"
+                      ref="videoPlayer"
+                      :options="playerOptions"
+                      :playsinline="true"
+                      style="width: 100%">
+        </video-player>
       </div>
     </el-card>
     <el-card v-else>
@@ -122,6 +138,7 @@
 import 'element-ui/lib/theme-chalk/display.css'
 import { VerifyEmail } from '../api/user'
 import { GetShareFile, CheckPwd, GetSubList, SaveToCloud } from '../api/share'
+import { FindById } from '../api/file'
 import util from '../common/util'
 import Cookies from 'js-cookie'
 // require styles
@@ -141,7 +158,7 @@ export default {
       sysUserAvatar: '',
       sysUserName: '',
       prompt: '验证中...',
-      shareFileIoc: null,
+      fileIoc: null,
       shareFile: {
         fileId: 0,
         fileRealName: '',
@@ -182,7 +199,8 @@ export default {
         src: '',
         pic: ''
       },
-      showElCardBody: false
+      showElCardBody: false,
+      mediaFile: null
     }
   },
   methods: {
@@ -245,11 +263,11 @@ export default {
     getSublist (parentId) {
       GetSubList({shareId: this.shareFile.shareId, sharePwd: this.shareFile.sharePwd, parentId}).then(res => {
         this.tableData = res.data.files
-        if (this.shareFile.fileType === 4) {
+        if (this.shareFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
           this.playerOptions.sources.push({
             type: 'video/mp4',
             src: res.data.files[0].mediaCachePath})
-        } else if (this.shareFile.fileType === 3) {
+        } else if (this.shareFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
           this.musicOptions.title = res.data.files[0].fileRealName
           this.musicOptions.src = res.data.files[0].mediaCachePath
         }
@@ -257,14 +275,14 @@ export default {
       })
     },
     getSublistClick (row, column, cell, event) {
-      if (row.fileType === 0 && column.property === 'fileRealName') {
+      if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR && column.property === 'fileRealName') {
         this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
         this.getSublist(row.id)
       }
     },
     // 使鼠标变成手型
     showPointer ({row, column, rowIndex, columnIndex}) {
-      if (row.fileType === 0 && columnIndex === 3) {
+      if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR && columnIndex === 3) {
         return 'cursor: pointer'
       }
       return ''
@@ -307,7 +325,7 @@ export default {
     getShareFile () {
       GetShareFile({ shareId: this.shareFile.shareId }).then(res => {
         this.shareFile = res.data
-        this.shareFileIoc = this.fileIcoFilter(this.shareFile.fileType)
+        this.fileIoc = this.fileIcoFilter(this.shareFile.fileType)
         let shareId = Cookies.get('shareId')
         let sharePwd = Cookies.get('sharePwd')
         if (shareId === this.shareFile.shareId) {
@@ -328,70 +346,46 @@ export default {
     },
     fileIcoFilter (fileType) {
       switch (fileType) {
-        case 0 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_DIR :
           return require('@/assets/file_ico/Folder_24_e0cacad.png')
-        case 1 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_TXT :
           return require('@/assets/file_ico/Text_24_dd1b3d8.png')
-        case 11 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_WORD :
           return require('@/assets/file_ico/Word_24_1e078ab.png')
-        case 12 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_EXCEL :
           return require('@/assets/file_ico/Excel_24_614e53a.png')
-        case 13 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_POWERPOINT :
           return require('@/assets/file_ico/PPT_24_0af6886.png')
-        case 14 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_PDF :
           return require('@/assets/file_ico/PDF_24_5caf7bf.png')
-        case 2 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_PIC :
           return require('@/assets/file_ico/Picture_24_dd06d30.png')
-        case 3 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_MUSIC :
           return require('@/assets/file_ico/Music_24_04cf4b7.png')
-        case 4 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_VIDEO :
           return require('@/assets/file_ico/Video_24_499ddeb.png')
-        case 5 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_ZIP :
           return require('@/assets/file_ico/ZIP_24_3670294.png')
-        case 6 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_APK :
           return require('@/assets/file_ico/Android_24_a529a3a.png')
-        case 9 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_OTHER :
           return require('@/assets/file_ico/Misc_24_156416f.png')
       }
     },
-    // listen event
-    onPlayerPlay (player) {
-      // console.log('player play!', player)
-    },
-    onPlayerPause (player) {
-      // console.log('player pause!', player)
-    },
-    onPlayerEnded (player) {
-      // console.log('player ended!', player)
-    },
-    onPlayerLoadeddata (player) {
-      // console.log('player Loadeddata!', player)
-    },
-    onPlayerWaiting (player) {
-      // console.log('player Waiting!', player)
-    },
-    onPlayerPlaying (player) {
-      // console.log('player Playing!', player)
-    },
-    onPlayerTimeupdate (player) {
-      // console.log('player Timeupdate!', player.currentTime())
-    },
-    onPlayerCanplay (player) {
-      // console.log('player Canplay!', player)
-    },
-    onPlayerCanplaythrough (player) {
-      // console.log('player Canplaythrough!', player)
-    },
-    // or listen state event
-    playerStateChanged (playerCurrentState) {
-      // console.log('player current update state', playerCurrentState)
-    },
-    // player is ready
-    playerReadied (player) {
-      // seek to 10s
-      console.log('example player 1 readied', player)
-      player.currentTime(10)
-      // console.log('example 01: the player is readied', player)
+    findById (id) {
+      FindById({ id }).then(res => {
+        this.mediaFile = res.data
+        this.fileIoc = this.fileIcoFilter(this.mediaFile.fileType)
+        if (this.mediaFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
+          this.playerOptions.sources.push({
+            type: 'video/mp4',
+            src: this.mediaFile.mediaCachePath})
+        } else if (this.mediaFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
+          this.musicOptions.title = this.mediaFile.fileRealName
+          this.musicOptions.src = this.mediaFile.mediaCachePath
+        }
+        this.showElCardBody = true
+      })
     }
   },
   mounted () {
@@ -401,8 +395,11 @@ export default {
       this.sysUserAvatar = user.avatar || '';
     }
     this.shareFile.shareId = this.$route.params.shareId
+    const id = this.$route.query.id
     if (this.shareFile.shareId) {
       this.getShareFile()
+    } else if (id) {
+      this.findById(id)
     } else {
       this.verifyEmail()
     }

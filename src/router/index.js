@@ -47,6 +47,18 @@ let routes = [
     hidden: true
   },
   {
+    path: '/home/videoPlay',
+    component: HomeNoLogin,
+    name: '',
+    hidden: true
+  },
+  {
+    path: '/home/audioPlay',
+    component: HomeNoLogin,
+    name: '',
+    hidden: true
+  },
+  {
     path: '/',
     component: Home,
     name: '文件列表',

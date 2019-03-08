@@ -1,6 +1,5 @@
 import SparkMD5 from 'spark-md5'
 import ElementUI from 'element-ui'
-// 耦合了，没办法呀
 import { CheckMd5 } from '@/api/file'
 import store from '../store'
 

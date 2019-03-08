@@ -208,6 +208,10 @@ export default {
       this.listLoading = true;
       // NProgress.start();
       GetFileList(param).then((res) => {
+        let path = this.$router.history.current.path;
+        let obj = {}
+        obj['parentId'] = this.filters.parentId
+        this.$router.push({ path, query: obj });
         this.tableData.pagination.total = res.data.pageInfo.total;
         this.tableData.pagination.pageNum = res.data.pageInfo.pageNum;
         // this.tableData.rows = [ ...this.tableData.rows, ...res.data.pageInfo.list ]
@@ -470,7 +474,14 @@ export default {
     }
   },
   mounted () {
+    const parentId = this.$route.query.parentId
+    if (parentId) {
+      this.filters.parentId = this.$route.query.parentId
+    }
     this.getFileList()
+    GetPathStore({ fileId: this.filters.parentId }).then(res => {
+      this.pathStore = res.data
+    })
   }
 }
 

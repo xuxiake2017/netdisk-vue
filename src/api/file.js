@@ -51,3 +51,7 @@ export const DeleteFile = params => {
 export const GetPathStore = params => {
   return post('file/getPathStore', params).then(res => res.data)
 }
+
+export const FindById = params => {
+  return post('file/findById', params).then(res => res.data)
+}

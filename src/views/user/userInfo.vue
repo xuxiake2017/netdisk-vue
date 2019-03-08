@@ -116,20 +116,20 @@ export default {
       })
     },
     labelType (userStatus) {
-      switch (userStatus) {
-        case '0':
+      switch (parseInt(userStatus)) {
+        case this.$NetdiskConstant.USER_STATUS_NORMAL:
           return 'primary'
-        case '2':
+        case this.$NetdiskConstant.USER_STATUS_VIP:
           return 'success'
         default:
           break
       }
     },
     statusLabels (userStatus) {
-      switch (userStatus) {
-        case '0':
+      switch (parseInt(userStatus)) {
+        case this.$NetdiskConstant.USER_STATUS_NORMAL:
           return '普通用户'
-        case '2':
+        case this.$NetdiskConstant.USER_STATUS_VIP:
           return 'VIP用户'
         default:
           break

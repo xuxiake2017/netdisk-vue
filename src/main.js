@@ -6,9 +6,9 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import 'font-awesome/css/font-awesome.min.css'
 import 'element-ui/lib/theme-chalk/display.css'
-import './common/request'
 import router from './router'
 import store from '@/store'
+import NetdiskConstant from './common/NetdiskConstant'
 
 Vue.use(ElementUI);
 
@@ -19,6 +19,7 @@ Vue.prototype.$confirm = ElementUI.MessageBox.confirm;
 Vue.prototype.$prompt = ElementUI.MessageBox.prompt;
 Vue.prototype.$notify = ElementUI.Notification;
 Vue.prototype.$message = ElementUI.Message;
+Vue.prototype.$NetdiskConstant = NetdiskConstant
 
 Vue.config.productionTip = false
 

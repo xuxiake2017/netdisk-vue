@@ -4,7 +4,7 @@
     <el-table :data="tableData.rows"
               highlight-current-row v-loading="listLoading"
               @selection-change="selsChange"
-              @cell-click="getSublist"
+              @cell-click="cellClickHandler"
               :cell-style="showPointer"
               class="table-list"
               :style="{height: computeHeight + 'px'}"
@@ -166,29 +166,29 @@ export default {
     // 显示文件图标
     fileIcoFilter (row) {
       switch (row.fileType) {
-        case 0 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_DIR :
           return require('../../assets/file_ico/Folder_24_e0cacad.png')
-        case 1 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_TXT :
           return require('../../assets/file_ico/Text_24_dd1b3d8.png')
-        case 11 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_WORD :
           return require('../../assets/file_ico/Word_24_1e078ab.png')
-        case 12 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_EXCEL :
           return require('../../assets/file_ico/Excel_24_614e53a.png')
-        case 13 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_POWERPOINT :
           return require('../../assets/file_ico/PPT_24_0af6886.png')
-        case 14 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_PDF :
           return require('../../assets/file_ico/PDF_24_5caf7bf.png')
-        case 2 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_PIC :
           return require('../../assets/file_ico/Picture_24_dd06d30.png')
-        case 3 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_MUSIC :
           return require('../../assets/file_ico/Music_24_04cf4b7.png')
-        case 4 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_VIDEO :
           return require('../../assets/file_ico/Video_24_499ddeb.png')
-        case 5 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_ZIP :
           return require('../../assets/file_ico/ZIP_24_3670294.png')
-        case 6 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_APK :
           return require('../../assets/file_ico/Android_24_a529a3a.png')
-        case 9 :
+        case this.$NetdiskConstant.FILE_TYPE_OF_OTHER :
           return require('../../assets/file_ico/Misc_24_156416f.png')
       }
     },
@@ -289,7 +289,7 @@ export default {
     },
     // 使鼠标变成手型
     showPointer ({row, column, rowIndex, columnIndex}) {
-      if (row.fileType === 0 && columnIndex === 3) {
+      if (columnIndex === 3) {
         return 'cursor: pointer'
       }
       return ''
@@ -354,9 +354,28 @@ export default {
     reacquireData () {
       this.$emit('reacquire-data')
     },
-    // 查询文件下的列表
-    getSublist (row, column, cell, event) {
-      this.$emit('get-sublist', row, column, cell, event)
+    cellClickHandler (row, column, cell, event) {
+      // 查询文件夹下的文件列表
+      if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR) {
+        this.$emit('get-sublist', row, column, cell, event)
+      } else if (this.type !== 'recycle' && this.type !== 'share') {
+        console.log(row)
+        if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
+          this.$router.push({
+            path: '/home/audioPlay',
+            query: {
+              id: row.id
+            }
+          })
+        } else if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
+          this.$router.push({
+            path: '/home/videoPlay',
+            query: {
+              id: row.id
+            }
+          })
+        }
+      }
     },
     // 文件分享
     shareFile (index, row) {
