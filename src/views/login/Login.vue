@@ -225,7 +225,7 @@ export default {
                   this.logining = false;
                   this.$confirm('注册成功，是否立即登录？', '提示', {
                   }).then(() => {
-                    this.$router.push({ path: '/login' });
+                    this.$router.push({ path: '/user/login' });
                   })
                 }).catch(reason => {
                   this.logining = false;
@@ -242,7 +242,7 @@ export default {
                 this.logining = false;
                 this.$confirm('注册成功，是否立即登录？', '提示', {
                 }).then(() => {
-                  this.$router.push({ path: '/login' });
+                  this.$router.push({ path: '/user/login' });
                 })
               }).catch(reason => {
                 this.logining = false;

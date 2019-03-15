@@ -355,25 +355,28 @@ export default {
       this.$emit('reacquire-data')
     },
     cellClickHandler (row, column, cell, event) {
-      // 查询文件夹下的文件列表
-      if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR) {
-        this.$emit('get-sublist', row, column, cell, event)
-      } else if (this.type !== 'recycle' && this.type !== 'share') {
-        console.log(row)
-        if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
-          this.$router.push({
-            path: '/home/audioPlay',
-            query: {
-              id: row.id
-            }
-          })
-        } else if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
-          this.$router.push({
-            path: '/home/videoPlay',
-            query: {
-              id: row.id
-            }
-          })
+      console.log(row, column, cell)
+      if (column.property === 'fileRealName') {
+        // 查询文件夹下的文件列表
+        if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR) {
+          this.$emit('get-sublist', row, column, cell, event)
+        } else if (this.type !== 'recycle' && this.type !== 'share') {
+          console.log(row)
+          if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
+            this.$router.push({
+              path: '/home/audioPlay',
+              query: {
+                id: row.id
+              }
+            })
+          } else if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
+            this.$router.push({
+              path: '/home/videoPlay',
+              query: {
+                id: row.id
+              }
+            })
+          }
         }
       }
     },

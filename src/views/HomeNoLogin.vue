@@ -109,7 +109,7 @@
         </video-player>
       </div>
     </el-card>
-    <el-card v-else>
+    <el-card v-if="verifyEmailTag">
       <div slot="header">
         <span>提示</span>
       </div>
@@ -200,7 +200,8 @@ export default {
         pic: ''
       },
       showElCardBody: false,
-      mediaFile: null
+      mediaFile: null,
+      verifyEmailTag: false
     }
   },
   methods: {
@@ -401,6 +402,7 @@ export default {
     } else if (id) {
       this.findById(id)
     } else {
+      this.verifyEmailTag = true
       this.verifyEmail()
     }
   },

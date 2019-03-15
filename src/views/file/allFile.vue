@@ -225,6 +225,7 @@ export default {
     // 查询文件下的列表
     getSublist (row, column, cell, event) {
       if (row.fileType === 0 && column.property === 'fileRealName') {
+        this.tableData.pagination.pageNum = 1
         if (this.searching) {
           this.searching = false
           this.filters.fileRealName = ''
@@ -245,10 +246,10 @@ export default {
     },
     // 文件路径跳转
     jump (item, index) {
-      console.log(this.pathStore.length, index)
       if ((this.pathStore.length === 1) || (this.pathStore.length > 1 && index + 1 === this.pathStore.length)) {
         return
       }
+      this.tableData.pagination.pageNum = 1
       this.pathStore.splice(index + 1, this.pathStore.length - 1)
       this.filters.parentId = item.parentId
       this.getFileList()
