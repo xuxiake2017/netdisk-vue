@@ -29,9 +29,11 @@
 <script>
 import FileList from '../../components/fileList'
 import { GetRecycleList, Reback } from '../../api/recycle'
+import usermixin from '@/mixins/userInfo'
 
 export default {
   name: 'document',
+  mixins: [usermixin],
   data () {
     return {
       filters: {
@@ -89,6 +91,7 @@ export default {
           type: 'success'
         });
         this.getRecycleList()
+        this.getInfo()
       })
     },
     // 分页页码改变

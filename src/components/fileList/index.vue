@@ -129,9 +129,11 @@ import { ReName, DeleteFile } from '../../api/file'
 import { DeleteRecycle } from '../../api/recycle'
 import { DeleteShare } from '../../api/share'
 import $ from 'jquery'
+import usermixin from '@/mixins/userInfo'
 
 export default {
   name: 'fileList',
+  mixins: [usermixin],
   data () {
     return {
       // listLoading: false,
@@ -230,6 +232,7 @@ export default {
               message: '删除成功!'
             })
             this.reacquireData()
+            this.getInfo()
           })
         })
       } else if (this.type === 'share') {

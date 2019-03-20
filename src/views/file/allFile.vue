@@ -46,6 +46,7 @@
         :before-upload="beforeUpload"
         :on-preview="handlePreview"
         :on-change="onFileChange"
+        :on-success="onSuccess"
         :with-credentials="true"
         multiple
         :auto-upload="false"
@@ -127,12 +128,14 @@ import { GetFileList, UploadMD5, ListAllDir, MkDir, MoveFile, GetPathStore } fro
 import { ShareFile } from '../../api/share'
 import GetFileMD5 from '../../common/getFileMD5'
 import ClipBoard from 'clipboard'
+import usermixin from '@/mixins/userInfo'
 
 export default {
   name: 'allFile',
   components: {
     FileList
   },
+  mixins: [usermixin],
   data () {
     return {
       pathStore: [
@@ -339,6 +342,17 @@ export default {
     },
     // 在文件上传之前
     beforeUpload (file) {
+      const user = this.$store.getters.getUser
+      const availableMemory = user.availableMemory
+      if (file.size > availableMemory) {
+        this.$notify({
+          duration: 2000,
+          title: '警告',
+          message: '剩余空间不足，请删除部分文件再试',
+          type: 'warning'
+        })
+        throw new Error('剩余空间不足，请删除部分文件再试');
+      }
       const file_ = this.$store.getters.getFile(file.uid)
       if (!file_) {
         this.$notify({
@@ -362,6 +376,7 @@ export default {
             message: `${file.name}上传成功！`,
             type: 'success'
           })
+          this.getInfo()
         }).catch(res => {
         })
         return false
@@ -394,6 +409,10 @@ export default {
           this.getFileList()
         }, 500)
       }
+    },
+    // 文件上传成功时的钩子
+    onSuccess (response, file, fileList) {
+      this.getInfo()
     },
     // 关闭移动文件对话框
     moveDialogClose (done) {
