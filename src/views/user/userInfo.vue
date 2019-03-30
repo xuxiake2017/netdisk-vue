@@ -121,6 +121,8 @@ export default {
           return 'primary'
         case this.$NetdiskConstant.USER_STATUS_VIP:
           return 'success'
+        case this.$NetdiskConstant.USER_STATUS_NOT_VERIFY:
+          return 'warning'
         default:
           break
       }
@@ -131,6 +133,8 @@ export default {
           return '普通用户'
         case this.$NetdiskConstant.USER_STATUS_VIP:
           return 'VIP用户'
+        case this.$NetdiskConstant.USER_STATUS_NOT_VERIFY:
+          return '未激活'
         default:
           break
       }
