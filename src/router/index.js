@@ -153,15 +153,15 @@ function browser (to) {
   const protocol = window.location.protocol
   const hostname = window.location.hostname
   const port = window.location.port
-  const path = to.path
+  const fullPath = to.fullPath
   const url = window.location.href
   if (isMobile) {
     if (url.indexOf('app') === -1) {
-      if (path.indexOf('/home/s') !== -1) {
+      if (fullPath.indexOf('/home/s') !== -1 || fullPath.indexOf('/home/verify') !== -1) {
         if (port) {
-          location.href = `${protocol}//${hostname}:${port}/app/#${path}`
+          location.href = `${protocol}//${hostname}:${port}/app/#${fullPath}`
         } else {
-          location.href = `${protocol}//${hostname}/app/#${path}`
+          location.href = `${protocol}//${hostname}/app/#${fullPath}`
         }
       } else {
         if (port) {
@@ -170,14 +170,15 @@ function browser (to) {
           location.href = `${protocol}//${hostname}/app`
         }
       }
+      return false
     }
   } else {
     if (url.indexOf('app') !== -1) {
-      if (path.indexOf('/home/s') !== -1) {
+      if (fullPath.indexOf('/home/s') !== -1 || fullPath.indexOf('/home/verify') !== -1) {
         if (port) {
-          location.href = `${protocol}//${hostname}:${port}/#${path}`
+          location.href = `${protocol}//${hostname}:${port}/#${fullPath}`
         } else {
-          location.href = `${protocol}//${hostname}/#${path}`
+          location.href = `${protocol}//${hostname}/#${fullPath}`
         }
       } else {
         if (port) {
@@ -186,14 +187,18 @@ function browser (to) {
           location.href = `${protocol}//${hostname}`
         }
       }
+      return false
     }
   }
+  return true
 }
 
 const whiteList = ['/user/login', '/user/register', '/home/verify', '/home/s', '/404'] // 不重定向白名单
 
 router.beforeEach((to, from, next) => {
-  browser(to)
+  if (!browser(to)) {
+    return
+  }
   NProgress.start();
   const token = getToken()
   if (token) {
