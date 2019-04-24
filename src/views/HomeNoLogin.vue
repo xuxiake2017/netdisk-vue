@@ -319,7 +319,12 @@ export default {
       const key = this.$route.query.key
       if (key) {
         VerifyEmail({ key }).then(res => {
-          this.setInterval()
+          if (res.data === 20102) {
+            // 已验证
+            this.$router.push({ path: '/fileList' })
+          } else {
+            this.setInterval()
+          }
         })
       }
     },
