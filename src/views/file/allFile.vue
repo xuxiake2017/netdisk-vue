@@ -168,7 +168,7 @@ export default {
       hackReset: false,
       moveDialogVisible: false,
       dirs: [],
-      movedFileSaveName: '',
+      movedFileKey: '',
       movedId: 0,
       // 新建文件夹
       dirDialogVisible: false,
@@ -227,7 +227,7 @@ export default {
     },
     // 查询文件下的列表
     getSublist (row, column, cell, event) {
-      if (row.fileType === 0 && column.property === 'fileRealName') {
+      if (row.fileType === 0 && column.property === 'fileName') {
         this.tableData.pagination.pageNum = 1
         if (this.searching) {
           this.searching = false
@@ -236,7 +236,7 @@ export default {
             this.pathStore = res.data
           })
         } else {
-          this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
+          this.pathStore.push({parentId: row.id, fileRealName: row.fileName})
         }
         this.filters.parentId = row.id
         this.getFileList()
@@ -294,7 +294,7 @@ export default {
             res.data.forEach((value, index) => {
               let node_ = {}
               node_['id'] = value.id
-              node_['label'] = value.fileRealName
+              node_['label'] = value.fileName
               nodes.push(node_)
             })
             resolve(nodes)
@@ -304,7 +304,7 @@ export default {
     },
     // 打开文件移动对话框
     handleMove (index, row) {
-      this.movedFileSaveName = row.fileSaveName
+      this.movedFileKey = row.key
       this.movedId = row.id
       this.moveDialogVisible = true
       this.hackReset = false;// 销毁组件
@@ -420,7 +420,7 @@ export default {
     },
     // 新建文件夹
     mkDir () {
-      MkDir({fileRealName: this.newDir, parentId: this.filters.parentId}).then(res => {
+      MkDir({fileName: this.newDir, parentId: this.filters.parentId}).then(res => {
         this.$notify({
           duration: 2000,
           title: '提示',
@@ -452,7 +452,7 @@ export default {
         })
         return
       }
-      MoveFile({parentId: parentId, fileSaveName: this.movedFileSaveName}).then(res => {
+      MoveFile({parentId: parentId, key: this.movedFileKey}).then(res => {
         this.$notify({
           duration: 2000,
           title: '提示',
@@ -465,7 +465,7 @@ export default {
     },
     // 文件分享
     shareFile (index, row) {
-      ShareFile({ fileSaveName: row.fileSaveName }).then(res => {
+      ShareFile({ fileKey: row.key }).then(res => {
         this.shareDialogVisible = true
         this.clipboardText = `链接：${res.data.serverHost}/#/home/s/${res.data.shareFile.shareId} 密码：${res.data.shareFile.sharePwd}`
         this.message = `文件分享成功，点击"确定"复制链接及密码（${this.clipboardText}）`

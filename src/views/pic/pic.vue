@@ -65,19 +65,20 @@ export default {
             o1['dayTime'] = util.formatDate.format(new Date(parseInt(key)), 'yyyy年MM月dd日')
             let imgList = []
             item[key].forEach((e) => {
+              console.log(e)
               let o2 = {}
-              if (e.mediaCachePath) {
-                o2['src'] = `${res.data.nginxServer}/${e.filePath}`
-                o2['msrc'] = e.mediaCachePath
+              if (e.fileOrigin) {
+                o2['src'] = `${res.data.nginxServer}/${e.fileOrigin.filePath}`
+                o2['msrc'] = e.fileOrigin.previewUrl
               } else {
                 o2['src'] = require('../../assets/file_ico/not_found.png')
                 o2['msrc'] = require('../../assets/file_ico/not_found.png')
               }
-              o2['alt'] = e.fileRealName
-              o2['title'] = e.fileRealName
-              if (e.imgWidth && e.imgHeight) {
-                o2['w'] = e.imgWidth
-                o2['h'] = e.imgHeight
+              o2['alt'] = e.fileName
+              o2['title'] = e.fileName
+              if (e.fileMedia) {
+                o2['w'] = e.fileMedia.imgWidth
+                o2['h'] = e.fileMedia.imgHeight
               } else {
                 o2['w'] = 1200
                 o2['h'] = 900

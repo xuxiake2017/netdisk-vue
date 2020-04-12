@@ -85,7 +85,7 @@ export default {
     },
     // 文件还原
     fileRestore (index, row) {
-      Reback({ recycleId: row.recycleId, fileSaveName: row.fileSaveName }).then(res => {
+      Reback({ recycleId: row.recycleId, fileKey: row.key }).then(res => {
         this.$message({
           message: '文件还原成功！',
           type: 'success'

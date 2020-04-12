@@ -18,13 +18,13 @@
           <img :src="fileIcoFilter(scope.row)" height="26" width="26" style="margin-top: 5px;"/>
         </template>
       </el-table-column>
-      <el-table-column prop="fileRealName" label="文件名" width="220" sortable>
+      <el-table-column prop="fileName" label="文件名" width="220" sortable>
       </el-table-column>
       <el-table-column prop="fileSize" label="文件大小" width="100" :formatter="formatFileSize" sortable>
       </el-table-column>
       <el-table-column
         v-if="type === 'allFile' || type === 'document' || type === 'music' || type === 'pic' || type === 'video'"
-        prop="uploadTime"
+        prop="updateTime"
         label="上传时间"
         width="200"
         :formatter="formatFileTime"
@@ -75,9 +75,9 @@
         width="100"
         sortable>
       </el-table-column>
-      <el-table-column v-if="(type !== 'allFile' || searching) && !(type === 'recycle' || type === 'share')" prop="uploadTime" label="文件路径" width="150">
+      <el-table-column v-if="(type !== 'allFile' || searching) && !(type === 'recycle' || type === 'share')" prop="filePath" label="文件路径" width="150">
         <template scope="scope">
-          <el-tag type="info">{{scope.row.pathname}}</el-tag>
+          <el-tag type="info">{{scope.row.filePath}}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作">
@@ -112,6 +112,7 @@
       title="提示"
       :visible.sync="reNameDialogVisible"
       :before-close="reNameDialogClose"
+      :close-on-click-modal="false"
       width="30%">
       <el-input v-model="oldName" placeholder="请输入文件夹名称"></el-input>
       <span slot="footer" class="dialog-footer">
@@ -201,8 +202,8 @@ export default {
     // 格式化文件时间
     formatFileTime (row, column) {
       switch (column.property) {
-        case 'uploadTime':
-          return util.formatDate.format(new Date(row.uploadTime), 'yyyy-MM-dd hh:mm:ss')
+        case 'updateTime':
+          return util.formatDate.format(new Date(row.updateTime), 'yyyy-MM-dd hh:mm:ss')
         case 'deleteTime':
           return util.formatDate.format(new Date(row.deleteTime), 'yyyy-MM-dd hh:mm:ss')
         case 'overTime':
@@ -226,7 +227,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          DeleteFile({ fileSaveName: row.fileSaveName }).then(res => {
+          DeleteFile({ fileKey: row.key }).then(res => {
             this.$message({
               type: 'success',
               message: '删除成功!'
@@ -280,12 +281,12 @@ export default {
     },
     // 文件下载
     handleDownload (index, row) {
-      window.open(`${process.env.BASE_API}/file/downLoad?fileSaveName=${row.fileSaveName}`, '_blank');
+      window.open(`${process.env.BASE_API}/file/downLoad?fileKey=${row.key}`, '_blank');
     },
     // 打开重命名对话框
     handleReName (index, row) {
       this.reNameDialogVisible = true
-      this.oldName = row.fileRealName.substring(0, row.isDir && row.fileExtName ? row.fileRealName.lastIndexOf('.') : row.fileRealName.length)
+      this.oldName = row.fileName.substring(0, row.isDir && row.fileExtName ? row.fileName.lastIndexOf('.') : row.fileName.length)
       this.reNameRow = {...row}
     },
     getFileList () {
@@ -328,10 +329,11 @@ export default {
     batchRemove () {},
     // 重命名
     reName () {
+      console.log(this.reNameRow)
       ReName({
         parentId: this.filters.parentId,
-        fileSaveName: this.reNameRow.fileSaveName,
-        fileRealName: this.oldName + (this.reNameRow.fileType === 0 ? '' : ('.' + this.reNameRow.fileExtName)),
+        key: this.reNameRow.key,
+        fileName: this.oldName + (this.reNameRow.isDir === 0 ? '' : ('.' + this.reNameRow.fileExtName)),
         isDir: this.reNameRow.isDir
       }).then(res => {
         this.$notify({
@@ -358,25 +360,23 @@ export default {
       this.$emit('reacquire-data')
     },
     cellClickHandler (row, column, cell, event) {
-      console.log(row, column, cell)
-      if (column.property === 'fileRealName') {
+      if (column.property === 'fileName') {
         // 查询文件夹下的文件列表
         if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR) {
           this.$emit('get-sublist', row, column, cell, event)
         } else if (this.type !== 'recycle' && this.type !== 'share') {
-          console.log(row)
           if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
             this.$router.push({
               path: '/home/audioPlay',
               query: {
-                id: row.id
+                fileKey: row.key
               }
             })
           } else if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
             this.$router.push({
               path: '/home/videoPlay',
               query: {
-                id: row.id
+                fileKey: row.key
               }
             })
           }

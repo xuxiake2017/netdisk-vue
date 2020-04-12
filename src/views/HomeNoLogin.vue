@@ -20,7 +20,7 @@
         <el-row>
           <el-col :span="8">
             <img :src="fileIoc" height="26" width="26" style="display:inline-block; vertical-align:middle;"/>
-            <span>{{shareFile.fileRealName}}</span>
+            <span>{{shareFile.fileName}}</span>
           </el-col>
           <el-col :span="5" style="position: absolute; right: 10px">
             <el-button v-if="shareFile.fileType != 0" size="small" @click="handleDownload">下载</el-button>
@@ -51,12 +51,12 @@
               <img :src="fileIcoFilter(scope.row.fileType)" height="26" width="26" style="margin-top: 5px;"/>
             </template>
           </el-table-column>
-          <el-table-column prop="fileRealName" label="文件名" width="220" sortable>
+          <el-table-column prop="fileName" label="文件名" width="220" sortable>
           </el-table-column>
           <el-table-column prop="fileSize" label="文件大小" width="100" :formatter="formatFileSize" sortable>
           </el-table-column>
           <el-table-column
-            prop="uploadTime"
+            prop="updateTime"
             label="上传时间"
             width="200"
             :formatter="formatFileTime"
@@ -87,20 +87,20 @@
         <el-row>
           <el-col :span="8">
             <img :src="fileIoc" height="26" width="26" style="display:inline-block; vertical-align:middle;"/>
-            <span>{{mediaFile.fileRealName}}</span>
+            <span>{{mediaFile.fileName}}</span>
           </el-col>
         </el-row>
         <el-row style="margin-top: 20px;">
           <el-col :span="4">
             <i class="fa fa-clock-o"></i>
-            <span>{{formatTime(mediaFile.uploadTime)}}</span>
+            <span>{{formatTime(mediaFile.updateTime)}}</span>
           </el-col>
         </el-row>
       </div>
-      <div v-if="mediaFile.fileType === $NetdiskConstant.FILE_TYPE_OF_MUSIC && showElCardBody">
+      <div v-if="mediaFile.fileOrigin.fileType === $NetdiskConstant.FILE_TYPE_OF_MUSIC && showElCardBody">
         <aplayer :music="musicOptions"/>
       </div>
-      <div v-if="mediaFile.fileType === $NetdiskConstant.FILE_TYPE_OF_VIDEO && showElCardBody">
+      <div v-if="mediaFile.fileOrigin.fileType === $NetdiskConstant.FILE_TYPE_OF_VIDEO && showElCardBody">
         <video-player class="vjs-custom-skin"
                       ref="videoPlayer"
                       :options="playerOptions"
@@ -137,8 +137,8 @@
 <script>
 import 'element-ui/lib/theme-chalk/display.css'
 import { VerifyEmail } from '../api/user'
-import { GetShareFile, CheckPwd, GetSubList, SaveToCloud } from '../api/share'
-import { FindById } from '../api/file'
+import { GetShareFile, CheckPwd, GetSubList, SaveToCloud, GetShareFileMediaInfo } from '../api/share'
+import { GetFileMediaInfo } from '../api/file'
 import util from '../common/util'
 import Cookies from 'js-cookie'
 // require styles
@@ -161,7 +161,7 @@ export default {
       fileIoc: null,
       shareFile: {
         fileId: 0,
-        fileRealName: '',
+        fileName: '',
         fileSaveName: '',
         fileSize: null,
         fileType: 0,
@@ -258,26 +258,38 @@ export default {
     },
     // 格式化文件时间
     formatFileTime (row, column) {
-      return util.formatDate.format(new Date(row.uploadTime), 'yyyy-MM-dd hh:mm:ss')
+      return util.formatDate.format(new Date(row.updateTime), 'yyyy-MM-dd hh:mm:ss')
     },
-    // 查询子目录
-    getSublist (parentId) {
-      GetSubList({shareId: this.shareFile.shareId, sharePwd: this.shareFile.sharePwd, parentId}).then(res => {
-        this.tableData = res.data.files
+    getShareFileMediaInfo (params) {
+      GetShareFileMediaInfo(params).then(res => {
+        const data = res.data
         if (this.shareFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
           this.playerOptions.sources.push({
             type: 'video/mp4',
-            src: res.data.files[0].mediaCachePath})
+            src: data.fileOrigin.previewUrl})
         } else if (this.shareFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
-          this.musicOptions.title = res.data.files[0].fileRealName
-          this.musicOptions.src = res.data.files[0].mediaCachePath
+          this.musicOptions.title = data.fileName
+          this.musicOptions.src = data.fileOrigin.previewUrl
+          this.musicOptions.artist = data.fileMedia.musicArtist
+          this.musicOptions.pic = data.fileMedia.musicPoster
         }
         this.showElCardBody = true
       })
     },
+    // 查询子目录
+    getSublist (parentId) {
+      if (this.shareFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO || this.shareFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
+        this.getShareFileMediaInfo(this.shareFile)
+      } else {
+        GetSubList({shareId: this.shareFile.shareId, sharePwd: this.shareFile.sharePwd, parentId}).then(res => {
+          this.tableData = res.data.files
+          this.showElCardBody = true
+        })
+      }
+    },
     getSublistClick (row, column, cell, event) {
-      if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR && column.property === 'fileRealName') {
-        this.pathStore.push({parentId: row.id, fileRealName: row.fileRealName})
+      if (row.fileType === this.$NetdiskConstant.FILE_TYPE_OF_DIR && column.property === 'fileName') {
+        this.pathStore.push({parentId: row.id, fileRealName: row.fileName})
         this.getSublist(row.id)
       }
     },
@@ -378,17 +390,20 @@ export default {
           return require('@/assets/file_ico/Misc_24_156416f.png')
       }
     },
-    findById (id) {
-      FindById({ id }).then(res => {
+    getFileMediaInfo (fileKey) {
+      GetFileMediaInfo({ fileKey }).then(res => {
         this.mediaFile = res.data
-        this.fileIoc = this.fileIcoFilter(this.mediaFile.fileType)
-        if (this.mediaFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
+        const fileType = this.mediaFile.fileOrigin.fileType
+        this.fileIoc = this.fileIcoFilter(fileType)
+        if (fileType === this.$NetdiskConstant.FILE_TYPE_OF_VIDEO) {
           this.playerOptions.sources.push({
             type: 'video/mp4',
-            src: this.mediaFile.mediaCachePath})
-        } else if (this.mediaFile.fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
-          this.musicOptions.title = this.mediaFile.fileRealName
-          this.musicOptions.src = this.mediaFile.mediaCachePath
+            src: this.mediaFile.fileOrigin.previewUrl})
+        } else if (fileType === this.$NetdiskConstant.FILE_TYPE_OF_MUSIC) {
+          this.musicOptions.title = this.mediaFile.fileName
+          this.musicOptions.src = this.mediaFile.fileOrigin.previewUrl
+          this.musicOptions.pic = this.mediaFile.fileMedia.musicPoster
+          this.musicOptions.artist = this.mediaFile.fileMedia.musicArtist
         }
         this.showElCardBody = true
       })
@@ -401,11 +416,11 @@ export default {
       this.sysUserAvatar = user.avatar || '';
     }
     this.shareFile.shareId = this.$route.params.shareId
-    const id = this.$route.query.id
+    const fileKey = this.$route.query.fileKey
     if (this.shareFile.shareId) {
       this.getShareFile()
-    } else if (id) {
-      this.findById(id)
+    } else if (fileKey) {
+      this.getFileMediaInfo(fileKey)
     } else {
       this.verifyEmailTag = true
       this.verifyEmail()
